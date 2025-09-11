@@ -50,8 +50,9 @@
   
 <h4>Model Tests</h4>
 <ol>
-  <li>placeholder</li>
-  <li>placeholder</li>
+  <li>SaveFileTest</li>
+  <li>LoadFileTest</li>
+  <li>UpdateFileTest</li>
 </ol>
 
 <h3>Stretch Goals</h3>
