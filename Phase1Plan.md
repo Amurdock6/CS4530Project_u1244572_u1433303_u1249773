@@ -14,22 +14,47 @@
   <p align="center"><em>Figures 1–2. Hand-drawn wireframes.</em></p>
 
 <h2>2) Architecture & Key Decisions (MVVM)</h2>
+<li>Espresso will be used for testing the interfacing aspect of our app</li>
+<li>placeholder</li>
 
 <h2>3) Task Breakdown (with owners & order)</h2>
+<em>Note: list only includes strictly necessary items for P1 completion. See Stretch Goals.</em>
 <h3>Layouts:</h3>
-<li>placeholder</li>
+<ol>
+  <li>fragment_canvas.xml<li>
+  <li>activity_drawing_canvas.xml</li>
+</ol>
 
-<h3>Classes</h3>
-<li>placeholder</li>
+<h3>Classes:</h3>
+<ol>
+  <li>placeholder model class(something to store our pen, size, and color?)</li>
+  <li>CanvasFragment.kt</li>
+  <li>DrawingCanvasActivity.kt</li>
+  <li>DrawingCanvasViewModel.kt</li>
+</ol>
 
 <h3>Unit Tests:</h3>
 <h4>Espresso Tests:</h4>
-<li>DrawPenTest</li>
-<li>ChangeSizeTest</li>
-<li>DrawBrushSmallTest</li>
-<li>DrawBrushLargeTest</li>
-<li>DrawPenSmallTest</li>
-<li>DrawPenLargeTest</li>
+<ol>
+  <li>DrawPenTest</li>
+  <li>ChangeDrawSizeLargeTest</li>
+  <li>ChangeDrawSizeMediumTest</li>
+  <li>DrawPenSmallTest</li>
+  <li>DrawPenLargeTest</li>
+  <li>DrawBrushSmallTest</li>
+  <li>DrawBrushLargeTest</li>
+</ol>
   
 <h4>Model Tests</h4>
-<li>placeholder</li>
+<ol>
+  <li>placeholder</li>
+  <li>placeholder</li>
+</ol>
+
+<h3>Stretch Goals</h3>
+<ol>
+  <li>activity_drawing_manager.xml</li>
+  <li>fragment_drawing_item.xml</li>
+  <li>DrawingItemFragment.kt</li>
+  <li>DrawingManagerActivity.kt</li>
+</ol>
