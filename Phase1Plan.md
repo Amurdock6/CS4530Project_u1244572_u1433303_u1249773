@@ -15,7 +15,10 @@
 
 <h2>2) Architecture & Key Decisions (MVVM)</h2>
 <li>Espresso will be used for testing the interfacing aspect of our app</li>
-<li>placeholder</li>
+<li>The view and model will be split - with the view handling the current drawing state (i.e. selected tool) while the model handles the file state and saving as such.</li>
+<li>We will maintain a stack of actions to support undo/redo.</li>
+<li>drawings will initially be kept in memory only, persistence later. </li>
+
 
 <h2>3) Task Breakdown (with owners & order)</h2>
 <em>Note: list only includes strictly necessary items for P1 completion. See Stretch Goals.</em>
