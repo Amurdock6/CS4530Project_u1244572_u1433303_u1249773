@@ -16,3 +16,20 @@
 <h2>2) Architecture & Key Decisions (MVVM)</h2>
 
 <h2>3) Task Breakdown (with owners & order)</h2>
+<h3>Layouts:</h3>
+<li>placeholder</li>
+
+<h3>Classes</h3>
+<li>placeholder</li>
+
+<h3>Unit Tests:</h3>
+<h4>Espresso Tests:</h4>
+<li>DrawPenTest</li>
+<li>ChangeSizeTest</li>
+<li>DrawBrushSmallTest</li>
+<li>DrawBrushLargeTest</li>
+<li>DrawPenSmallTest</li>
+<li>DrawPenLargeTest</li>
+  
+<h4>Model Tests</h4>
+<li>placeholder</li>
