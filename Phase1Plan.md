@@ -34,7 +34,7 @@
   <li>placeholder model class(something to store our bitmap, pen, size, and color?) [Alex]</li>
   <li>CanvasFragment.kt [Josh]</li>
   <li>DrawingCanvasActivity.kt [Josh, Alex, Daniel]</li>
-  <li>DrawingCanvasViewModel.kt [Josh, Alex, Daniel]</li>
+  <li>DrawingCanvasViewModel.kt [Alex, Daniel]</li>
 </ol>
 
 <h3>Unit Tests:</h3>
@@ -47,14 +47,15 @@
   <li>DrawPenLargeTest [Daniel]</li>
   <li>DrawBrushSmallTest [Daniel]</li>
   <li>DrawBrushLargeTest [Daniel]</li>
+  <li>RestoreDrawingTest [Alex, Daniel, Josh]</li>
 </ol>
   
 <h4>Model Tests</h4>
 <ol>
   <li>ChangePenTest [Josh]</li>
   <li>ChangeColorTest [Josh]</li>
-  <li>StoreToBitmapTest[Alex]</li>
-  <li>RetrieveBitmapTest[Daniel]</li>
+  <li>StoreToBitmapTest [Alex]</li>
+  <li>RetrieveBitmapTest [Daniel]</li>
 </ol>
 
 <h3>Stretch Goals</h3>
