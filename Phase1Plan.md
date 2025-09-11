@@ -21,7 +21,7 @@
 <em>Note: list only includes strictly necessary items for P1 completion. See Stretch Goals.</em>
 <h3>Layouts:</h3>
 <ol>
-  <li>fragment_canvas.xml<li>
+  <li>fragment_canvas.xml</li>
   <li>activity_drawing_canvas.xml</li>
 </ol>
 
