@@ -6,7 +6,9 @@ import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,19 +39,36 @@ fun ColorPickerDialog(
 ) {
     var selected by remember { mutableStateOf(initial) }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = true)) {
-        Surface(shape = MaterialTheme.shapes.medium) {
-            Column {
+    Dialog(
+        onDismissRequest = onDismiss,
+        // Let us control the width instead of the platform wrapping to content
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(min = 360.dp, max = 600.dp), // force min width, cap max
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 AndroidView<View>(
+                    modifier = Modifier.fillMaxWidth(),
                     factory = { ctx: Context ->
-                        val root: View = LayoutInflater.from(ctx)
+                        val root = LayoutInflater.from(ctx)
                             .inflate(R.layout.dialog_color_picker, null, false)
+
+                        // Make sure the Android root takes the dialog's full width
+                        root.layoutParams = android.view.ViewGroup.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
 
                         val picker: ColorPickerView = root.findViewById(R.id.colorPickerView)
                         val bSlider: BrightnessSlideBar = root.findViewById(R.id.brightnessSlideBar)
                         val aSlider: AlphaSlideBar = root.findViewById(R.id.alphaSlideBar)
                         val preview: View = root.findViewById(R.id.previewColorView)
-                        val etHex: TextInputEditText = root.findViewById(R.id.etHex)
+                        val etHex: com.google.android.material.textfield.TextInputEditText =
+                            root.findViewById(R.id.etHex)
 
                         val argb = android.graphics.Color.argb(
                             (initial.alpha * 255).toInt(),
@@ -63,16 +82,14 @@ fun ColorPickerDialog(
                         preview.setBackgroundColor(argb)
                         etHex.setText("#%08X".format(argb))
 
-                        // IMPORTANT: use ColorEnvelopeListener
                         picker.setColorListener(
-                            ColorEnvelopeListener { envelope, _ ->
-                                val c = envelope.color   // <-- Int
+                            com.skydoves.colorpickerview.listeners.ColorEnvelopeListener { envelope, _ ->
+                                val c = envelope.color
                                 preview.setBackgroundColor(c)
                                 etHex.setText("#%08X".format(c))
                                 selected = Color(c)
                             }
                         )
-
                         root
                     }
                 )
@@ -80,7 +97,9 @@ fun ColorPickerDialog(
                 Divider()
 
                 Row(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) { Text("Cancel") }

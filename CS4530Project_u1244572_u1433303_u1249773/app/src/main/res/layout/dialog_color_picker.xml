@@ -4,24 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:theme="@style/ThemeOverlay.Material3">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/preview_box"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:text="Color Preview:"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurface" />
+            android:textAlignment="viewStart"
+            style="@style/TextAppearance.Material3.BodyMedium" />
 
         <FrameLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
@@ -30,89 +32,66 @@
 
             <View
                 android:id="@+id/previewColorView"
-                android:layout_width="64dp"
+                android:layout_width="match_parent"
                 android:layout_height="64dp"
-                android:background="#FFFFFFFF"
-                android:contentDescription="@string/color_preview_desc" />
-
+                android:layout_gravity="center_horizontal"
+                android:background="#FFFFFFFF" />
         </FrameLayout>
 
-        <!-- Color wheel in the center -->
         <com.example.androidracedash.view.SafeColorPickerView
             android:id="@+id/colorPickerView"
             android:layout_width="match_parent"
             android:layout_height="270dp"
             android:layout_marginBottom="16dp" />
 
-        <!-- Live preview square just below the wheel -->
-
-        <!-- Brightness slider label -->
-
-        <!-- Brightness slider itself -->
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/brightnessLabel"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:text="B: 100 %"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="B: 100%"
+            style="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.example.androidracedash.view.SafeBrightnessSlideBar
             android:id="@+id/brightnessSlideBar"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginBottom="16dp"
-            app:selector_BrightnessSlider="@drawable/color_picker_slider_selector" />
+            app:selector="@drawable/color_picker_slider_selector" />
 
-        <!-- Alpha slider label -->
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/alphaLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
-            android:text="A: 100 %"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="A: 100%"
+            style="@style/TextAppearance.Material3.BodyMedium" />
 
-        <!-- Alpha slider itself -->
         <com.example.androidracedash.view.SafeAlphaSlideBar
             android:id="@+id/alphaSlideBar"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginBottom="16dp"
-            app:selector_AlphaSlideBar="@drawable/color_picker_slider_selector" />
+            app:selector="@drawable/color_picker_slider_selector" />
 
-        <!-- Hint positioned above the hex field -->
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/hexHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="2dp"
             android:text="@string/hex_color_hint"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurface" />
+            style="@style/TextAppearance.Material3.BodyMedium" />
 
-        <!-- Hex entry field -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilHex"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@null"
-            android:textColorHint="?attr/colorOnSurface"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="?attr/colorOnSurface">
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etHex"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="40dp"
-                android:paddingTop="10dp"
-                android:textColor="?attr/colorOnSurface"
-                android:textColorHint="?attr/colorOnSurface" />
-
+                android:layout_height="wrap_content" />
         </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
