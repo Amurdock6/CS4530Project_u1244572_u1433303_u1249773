@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import cs4530.u1433303.cs4530drawingapplication.ui.theme.CS4530DrawingApplicationTheme
 import kotlinx.coroutines.delay
@@ -82,7 +83,10 @@ fun App(viewModel: DrawingViewModel) {
 
 @Composable
 fun DrawingScreen(viewModel: DrawingViewModel) {
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = Modifier
+        .fillMaxSize()
+        .testTag("drawingScreen") // Required for espresso testing
+    ) {
         DrawingAppScreen(viewModel)
     }}
 
