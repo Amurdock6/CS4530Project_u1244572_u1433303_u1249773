@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:theme="@style/ThemeOverlay.Material3">
+
+    <!-- Title above the swatch: e.g. “Needle colour” or “Dial colour” -->
+    <TextView
+        android:id="@+id/lbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
+        android:textColor="?attr/colorOnSecondary"
+        android:textStyle="bold" />
+
+    <!-- The swatch itself (MaterialCardView supplies the 2dp white outline) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/colourSwatch"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="2dp"
+        app:cardPreventCornerOverlap="false"
+        app:strokeWidth="2dp"
+        app:strokeColor="?attr/colorOnSecondary"
+        app:cardUseCompatPadding="true" />
+</LinearLayout>

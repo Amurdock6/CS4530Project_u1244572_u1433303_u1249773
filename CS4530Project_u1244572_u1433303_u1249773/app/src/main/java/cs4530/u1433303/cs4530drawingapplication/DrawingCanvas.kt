@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.StrokeCap
 
 @Composable
 fun DrawingCanvas(
@@ -48,7 +49,10 @@ fun DrawingCanvas(
             drawPath(
                 path = path,
                 color = stroke.color,
-                style = Stroke(width = stroke.strokeWidth)
+                style = Stroke(
+                    width = stroke.strokeWidth,
+                    cap = if (stroke.shape == BrushShape.Round) StrokeCap.Round else StrokeCap.Square
+                )
             )
         }
 
@@ -63,7 +67,10 @@ fun DrawingCanvas(
             drawPath(
                 path = path,
                 color = state.value.brushColor,
-                style = Stroke(width = state.value.brushSize)
+                style = Stroke(
+                    width = state.value.brushSize,
+                    cap = if (state.value.brushShape == BrushShape.Round) StrokeCap.Round else StrokeCap.Square
+                )
             )
         }
     }
