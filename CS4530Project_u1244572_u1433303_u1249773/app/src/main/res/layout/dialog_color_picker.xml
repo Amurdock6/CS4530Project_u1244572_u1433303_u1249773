@@ -44,12 +44,14 @@
             android:layout_height="270dp"
             android:layout_marginBottom="16dp" />
 
+        <!-- Make labels left-aligned and full width -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/brightnessLabel"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:text="B: 100%"
+            android:textAlignment="viewStart"
             style="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.example.androidracedash.view.SafeBrightnessSlideBar
@@ -57,14 +59,15 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginBottom="16dp"
-            app:selector="@drawable/color_picker_slider_selector" />
+            app:selector_BrightnessSlider="@drawable/color_picker_slider_selector" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/alphaLabel"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
             android:text="A: 100%"
+            android:textAlignment="viewStart"
             style="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.example.androidracedash.view.SafeAlphaSlideBar
@@ -72,16 +75,9 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginBottom="16dp"
-            app:selector="@drawable/color_picker_slider_selector" />
+            app:selector_AlphaSlideBar="@drawable/color_picker_slider_selector" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/hexHint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
-            android:text="@string/hex_color_hint"
-            style="@style/TextAppearance.Material3.BodyMedium" />
-
+        <!-- Make HEX easy to type and single-line -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilHex"
             android:layout_width="match_parent"
@@ -91,7 +87,10 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etHex"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textNoSuggestions|textCapCharacters"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
