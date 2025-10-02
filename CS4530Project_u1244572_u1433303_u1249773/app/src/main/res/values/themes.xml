@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App theme -->
+    <style name="Theme.CS4530DrawingApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- optional: keep your window tweaks -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 
-    <style name="Theme.CS4530DrawingApplication" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Used for Compose Dialog window (if you referenced it anywhere) -->
+    <style name="DialogWindowTheme" parent="ThemeOverlay.Material3" />
 </resources>
