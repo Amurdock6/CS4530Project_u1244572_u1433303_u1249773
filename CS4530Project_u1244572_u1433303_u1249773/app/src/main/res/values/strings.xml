@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CS4530DrawingApplication</string>
+    <string name="color_preview_desc">Current color preview</string>
+    <string name="hex_color_hint">HEX (e.g. #RRGGBBAA)</string>
 </resources>
