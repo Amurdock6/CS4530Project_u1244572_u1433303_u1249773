@@ -3,6 +3,7 @@ package cs4530.u1433303.cs4530drawingapplication
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,21 +58,50 @@ fun ColorPickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     factory = { ctx: Context ->
                         val root = LayoutInflater.from(ctx)
-                            .inflate(R.layout.dialog_color_picker, null, false)
-
-                        // Make sure the Android root takes the dialog's full width
-                        root.layoutParams = android.view.ViewGroup.LayoutParams(
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
+                            .inflate(R.layout.dialog_color_picker, null, false).apply {
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                                )
+                            }
 
                         val picker: ColorPickerView = root.findViewById(R.id.colorPickerView)
                         val bSlider: BrightnessSlideBar = root.findViewById(R.id.brightnessSlideBar)
                         val aSlider: AlphaSlideBar = root.findViewById(R.id.alphaSlideBar)
                         val preview: View = root.findViewById(R.id.previewColorView)
-                        val etHex: com.google.android.material.textfield.TextInputEditText =
-                            root.findViewById(R.id.etHex)
+                        val etHex: TextInputEditText = root.findViewById(R.id.etHex)
+                        val brightnessLabel: android.widget.TextView = root.findViewById(R.id.brightnessLabel)
+                        val alphaLabel: android.widget.TextView = root.findViewById(R.id.alphaLabel)
 
+                        fun updatePercentLabels(colorInt: Int) {
+                            // Brightness (HSV value) and Alpha in %
+                            val hsv = FloatArray(3)
+                            android.graphics.Color.colorToHSV(colorInt, hsv)
+                            val brightPct = (hsv[2] * 100f).toInt()
+                            val alphaPct = (android.graphics.Color.alpha(colorInt) * 100f / 255f).toInt()
+                            brightnessLabel.text = "B: $brightPct%"
+                            alphaLabel.text = "A: $alphaPct%"
+                        }
+
+                        var suppressHexWatcher = false
+                        fun setHexField(colorInt: Int) {
+                            suppressHexWatcher = true
+                            etHex.setText("#%08X".format(colorInt))
+                            etHex.setSelection(etHex.text?.length ?: 0)
+                            suppressHexWatcher = false
+                        }
+
+                        fun applyColor(colorInt: Int) {
+                            preview.setBackgroundColor(colorInt)
+                            selected = Color(colorInt)
+                            setHexField(colorInt)
+                            updatePercentLabels(colorInt)
+
+                            // Optionally move the wheel/rails to this color too:
+                            picker.setInitialColor(colorInt)
+                        }
+
+                        // Initial color
                         val argb = android.graphics.Color.argb(
                             (initial.alpha * 255).toInt(),
                             (initial.red * 255).toInt(),
@@ -78,23 +110,45 @@ fun ColorPickerDialog(
                         )
                         picker.attachBrightnessSlider(bSlider)
                         picker.attachAlphaSlider(aSlider)
-                        picker.setInitialColor(argb)
-                        preview.setBackgroundColor(argb)
-                        etHex.setText("#%08X".format(argb))
+                        applyColor(argb)
 
+                        // Keep labels & HEX in sync while picking
                         picker.setColorListener(
-                            com.skydoves.colorpickerview.listeners.ColorEnvelopeListener { envelope, _ ->
+                            ColorEnvelopeListener { envelope, _ ->
                                 val c = envelope.color
                                 preview.setBackgroundColor(c)
-                                etHex.setText("#%08X".format(c))
                                 selected = Color(c)
+                                setHexField(c)
+                                updatePercentLabels(c)
                             }
                         )
+
+                        // Parse HEX as the user types: #RRGGBB or #AARRGGBB
+                        etHex.addTextChangedListener(object : android.text.TextWatcher {
+                            override fun afterTextChanged(s: android.text.Editable?) {
+                                if (suppressHexWatcher) return
+                                val t = s?.toString()?.trim().orEmpty()
+                                if (t.isEmpty()) return
+
+                                val candidate = if (t.startsWith("#")) t else "#$t"
+                                val colorInt = try {
+                                    // only accept #RRGGBB or #AARRGGBB
+                                    if (candidate.length == 7 || candidate.length == 9)
+                                        android.graphics.Color.parseColor(candidate)
+                                    else return
+                                } catch (_: IllegalArgumentException) { return }
+
+                                applyColor(colorInt)
+                            }
+                            override fun beforeTextChanged(cs: CharSequence?, start: Int, count: Int, after: Int) {}
+                            override fun onTextChanged(cs: CharSequence?, start: Int, before: Int, count: Int) {}
+                        })
+
                         root
                     }
                 )
 
-                Divider()
+                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
                 Row(
                     modifier = Modifier
