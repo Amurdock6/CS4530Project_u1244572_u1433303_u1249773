@@ -47,7 +47,11 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
             TopAppBar(
                 title = { Text("Drawing App") },
                 actions = {
-                    IconButton(onClick = { viewModel.clearCanvas() }) {
+                    IconButton(
+                        modifier = Modifier.testTag("clearCanvasButton"),
+                        onClick = { viewModel.clearCanvas() }
+                    )
+                    {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Clear Canvas"
