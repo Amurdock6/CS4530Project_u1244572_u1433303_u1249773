@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class) // using this for TopAppBar, API is stable enough
@@ -61,7 +62,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
         ) {
             // Canvas
             DrawingCanvas(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(1f).fillMaxWidth().testTag("drawCanvas"),
                 viewModel = viewModel
             )
 
@@ -85,6 +86,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
                 Column(Modifier.weight(1f)) {
                     Text("Size: ${state.value.brushSize.toInt()}")
                     Slider(
+                        modifier = Modifier.testTag("brushSizeSlider"),
                         value = state.value.brushSize,
                         onValueChange = { viewModel.setBrushSize(it) },
                         valueRange = 1f..60f,   // tune as you like
@@ -97,12 +99,14 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
                 // Shape: Round | Square (simple 2-state chips)
                 Row {
                     FilterChip(
+                        modifier = Modifier.testTag("circleBrushButton"),
                         selected = state.value.brushShape == BrushShape.Round,
                         onClick = { viewModel.setBrushShape(BrushShape.Round) },
                         label = { Text("○") }
                     )
                     Spacer(Modifier.width(8.dp))
                     FilterChip(
+                        modifier = Modifier.testTag("squareBrushButton"),
                         selected = state.value.brushShape == BrushShape.Square,
                         onClick = { viewModel.setBrushShape(BrushShape.Square) },
                         label = { Text("▢") }
