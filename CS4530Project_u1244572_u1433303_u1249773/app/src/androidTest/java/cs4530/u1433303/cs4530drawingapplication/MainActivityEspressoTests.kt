@@ -111,7 +111,23 @@ class MainActivityEspressoTests {
         assertTrue(vm.uiState.value.brushSize >= INITIAL_PEN_SIZE)
     }
 
-    // TODO: Test for clear canvas button
-    // TODO: Clear canvas button (in DrawingAppScreen.kt) needs testTag modifier
+    /**
+     * Checks that the clearCanvasButton exists, is displayed,
+     * and can actually clear the DrawingViewModel's list of Strokes
+     * to that of an empty List.
+     */
+    @Test
+    fun clearCanvasTest(){
+        composeTestRule.onNode(hasTestTag("clearCanvasButton"))
+            .assertExists()
+            .assertIsDisplayed()
+        composeTestRule.onNode(hasTestTag("drawCanvas"))
+            .performTouchInput { swipeUp() }
+            .performTouchInput { swipeRight() }
+        Thread.sleep(1000)
+        composeTestRule.onNode(hasTestTag("clearCanvasButton"))
+            .performClick()
+        assertTrue(vm.uiState.value.strokes.isEmpty())
+    }
 
 }
