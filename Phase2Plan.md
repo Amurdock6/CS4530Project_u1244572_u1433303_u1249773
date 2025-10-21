@@ -18,7 +18,7 @@ Follow the repository pattern, making the repository the middle layer between yo
 ## (4) Main Window
 [TO-DO] After the splash screen, the app should include a main screen that lists all previously saved drawings.
 
-[TO-DO] Create relevant JPC for this screen. DrawingSelectionActvitiy
+[TO-DO] Create relevant JPC for this screen. MainScreen
 
 [TO-DO] This screen must also provide a button or option to start a new drawing.
 
