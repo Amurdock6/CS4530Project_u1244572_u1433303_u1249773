@@ -34,6 +34,10 @@ import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
 
+/**
+ * Composable for a color picker.
+ * Features a radial color-picker, sliders for opacity and brightness.
+ */
 @Composable
 fun ColorPickerDialog(
     initial: Color,
