@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 import org.junit.Assert.assertTrue
 
 @RunWith(AndroidJUnit4::class)
-class MainActivityEspressoTests {
+class DrawingAppScreenEspressoTests {
     // Setup an isolated lightweight activity that will hold ONLY our composable that needs testing
     @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -62,6 +62,8 @@ class MainActivityEspressoTests {
     // TODO: Split tests into smaller unit tests
     //  (i.e: a test to check if a composable exists, then a test that just interfaces with
     //  with the composable whilst assuming it exists)
+
+    // TODO: .onNodeWithTag() may be more ideal for readability, but onNode(hasTestTag()) works fine
 
     /**
      * 3 part test that checks if we can draws on the DrawingAppScreen's
@@ -129,5 +131,11 @@ class MainActivityEspressoTests {
             .performClick()
         assertTrue(vm.uiState.value.strokes.isEmpty())
     }
+
+    // TODO: Need a way to conduct a color picking test through espresso;
+    //  this may require some work/research to get done, we'd have to somehow
+    //  check testTags in ColorPickerDialog, wait for certain events to occur,
+    //  then finally check with the vm to see if, internally, the color was changed.
+    //  Optionally draw on the screen to visually verify.
 
 }
