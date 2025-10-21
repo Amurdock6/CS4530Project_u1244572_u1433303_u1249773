@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -32,20 +34,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 
 @OptIn(ExperimentalMaterial3Api::class) // using this for TopAppBar, API is stable enough
 // but we probably should refactor at some point to avoid this and just use row and column stuffs
 @Composable
-fun DrawingAppScreen(viewModel: DrawingViewModel) {
+fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
     val state = viewModel.uiState.collectAsState()
     var showColorDialog by remember { mutableStateOf(false) }
+    var canvasViewRef by remember { mutableStateOf<ComposeView?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Drawing App") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 actions = {
                     IconButton(
                         modifier = Modifier.testTag("clearCanvasButton"),
@@ -57,6 +71,19 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
                             contentDescription = "Clear Canvas"
                         )
                     }
+                    IconButton(
+                        modifier = Modifier.testTag("saveCanvasButton"),
+                        onClick = {
+                            canvasViewRef?.let { view -> viewModel.saveDrawing(view) }
+                        }
+                    ) {
+                        Icon(
+                            // TODO: replace with save icon V
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground), // or use Icons.Default.Save if you add material icon
+                            contentDescription = "Save Drawing"
+                        )
+                    }
+
                 }
             )
         }
@@ -65,12 +92,22 @@ fun DrawingAppScreen(viewModel: DrawingViewModel) {
             modifier = Modifier.fillMaxSize().padding(innerPadding)
         ) {
             // Canvas
-            DrawingCanvas(
-                modifier = Modifier.weight(1f).fillMaxWidth().testTag("drawCanvas"),
-                viewModel = viewModel
+            AndroidView(
+                factory = { ctx ->
+                    ComposeView(ctx).apply {
+                        setContent {
+                            DrawingCanvas(viewModel = viewModel)
+                        }
+                        canvasViewRef = this
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .testTag("drawCanvas")
             )
 
-            // --- Pen bar (like your mock) ---
+            // --- Pen bar ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
