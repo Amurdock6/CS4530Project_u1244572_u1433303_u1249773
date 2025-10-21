@@ -9,9 +9,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,19 +28,49 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import cs4530.u1433303.cs4530drawingapplication.ui.theme.CS4530DrawingApplicationTheme
 import kotlinx.coroutines.delay
-
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.collectAsState
+import androidx.room.Room
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
 
 class MainActivity : ComponentActivity() {
-    private val drawingViewModel: DrawingViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            DrawingDatabase::class.java,
+            "drawing_db"
+        ).fallbackToDestructiveMigration().build()
+        val dao = db.drawingDao()
+
+        val repository = DrawingRepository(
+            dao,
+            context = applicationContext
+        )
+
+        val viewModelFactory = ViewModelFactory(repository, dao)
+
+        val mainViewModel: MainViewModel by viewModels { viewModelFactory }
+        val drawingViewModel: DrawingViewModel by viewModels { viewModelFactory }
+
         enableEdgeToEdge()
         setContent {
             CS4530DrawingApplicationTheme {
-                App(drawingViewModel)
+                App(mainViewModel = mainViewModel, drawingViewModel = drawingViewModel)
             }
         }
     }
@@ -41,74 +78,112 @@ class MainActivity : ComponentActivity() {
 
 // put the application in here basically
 @Composable
-fun App(viewModel: DrawingViewModel) {
+fun App(mainViewModel: MainViewModel, drawingViewModel: DrawingViewModel) {
     var showSplash by remember { mutableStateOf(true) }
-    //TODO: currently the app forgets its done with the splash screen when it rotates,
-    // need to make that part of a viewModel and make it persist past rotations
     var splashDone by remember { mutableStateOf(false) }
-    var currentlyDrawing by remember { mutableStateOf(false)}
+    var currentScreen by remember { mutableStateOf("main") }
 
     LaunchedEffect(Unit) {
         delay(900)
         showSplash = false
-
         delay(800)
         splashDone = true
     }
 
     when {
         showSplash || !splashDone -> {
-            Box(modifier = Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = showSplash,
+                exit = fadeOut(animationSpec = tween(1000))
+            ) {
+                SplashScreen()
+            }
+        }
 
-                AnimatedVisibility(visible = showSplash, exit = fadeOut(animationSpec = tween(1000)))
-                {
-                    SplashScreen()
+        splashDone && currentScreen == "main" -> {
+            MainScreen(
+                viewModel = mainViewModel,
+                onNewDrawing = { currentScreen = "drawing" },
+                onOpenDrawing = { drawing ->
+                    drawingViewModel.loadDrawing(drawing)
+                    currentScreen = "drawing"
+                }
+            )
+        }
+
+        splashDone && currentScreen == "drawing" -> {
+            DrawingScreen(
+                viewModel = drawingViewModel,
+                onBack = { currentScreen = "main" }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun DrawingScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        DrawingAppScreen(
+            viewModel,
+            onBack = onBack
+        )
+    }}
+
+@Composable
+fun MainScreen(
+    viewModel: MainViewModel,
+    onNewDrawing: () -> Unit,
+    onOpenDrawing: (DrawingEntity) -> Unit
+) {
+    val drawings by viewModel.drawings.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            "My Drawings",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(drawings) { drawing ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenDrawing(drawing) }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = drawing.name)
+                    IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
                 }
             }
         }
-        //TODO: create main screen to load files from and go there first before opening a drawing
-    // - commented out having the main screen where file loading and such happens
-    // will also need the currentlyDrawing to persist in a viewModel so we
-    // don't open the file menu every time your screen rotates\
 
-//        splashDone && !currentlyDrawing -> {
-//            MainScreen()
-//        }
-        splashDone /*&& currentlyDrawing*/ -> {
-            DrawingScreen(viewModel)
+        Button(
+            onClick = onNewDrawing,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(16.dp)
+        ) {
+            Text("New Drawing")
         }
     }
 }
 
-@Composable
-fun DrawingScreen(viewModel: DrawingViewModel) {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        DrawingAppScreen(viewModel)
-    }}
-
-//TODO: file opening manager screen type of thing goes here.
-@Composable
-fun MainScreen() {
-    // main screen here -> menu to open drawings maybe? or the drawing page perhaps
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        androidx.compose.material3.Text(text = "Main Screen")
-    }
-}
 
 @Composable
 fun SplashScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+
     )
     {
-        // TODO: replace splash image with something nicer looking (white default on white background currently lmao)
-        // insert splash image here - currently uses the 'default' ic_launcher_foreground
         Image (
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.splash_screen_image),
             contentDescription = "Splash logo image"
         )
     }

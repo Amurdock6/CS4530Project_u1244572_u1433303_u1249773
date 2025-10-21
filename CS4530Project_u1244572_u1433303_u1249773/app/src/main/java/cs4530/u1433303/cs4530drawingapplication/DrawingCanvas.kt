@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.StrokeCap
@@ -36,6 +37,10 @@ fun DrawingCanvas(
             )
         }
     ) {
+        state.value.backgroundImage?.let {
+            drawImage(it.asImageBitmap())
+        }
+
         // draw the strokes
         for (stroke in state.value.strokes) {
             val path = Path().apply {
