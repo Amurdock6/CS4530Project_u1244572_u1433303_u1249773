@@ -39,6 +39,24 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import android.content.Intent
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import androidx.core.view.drawToBitmap
+import java.io.File
+import java.io.FileOutputStream
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
+
+
 
 @OptIn(ExperimentalMaterial3Api::class) // using this for TopAppBar, API is stable enough
 // but we probably should refactor at some point to avoid this and just use row and column stuffs
@@ -47,6 +65,39 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
     val state = viewModel.uiState.collectAsState()
     var showColorDialog by remember { mutableStateOf(false) }
     var canvasViewRef by remember { mutableStateOf<ComposeView?>(null) }
+
+    val context = LocalContext.current
+
+    // Photo Picker launcher (imports an image as background)
+    val photoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.importFromUri(context, uri)
+        }
+    }
+
+    // Helper: share current canvas as a PNG via FileProvider
+    fun shareCurrentCanvas() {
+        val view = canvasViewRef ?: return
+        val bmp = view.drawToBitmap()
+        val file = File(context.cacheDir, "share_${System.currentTimeMillis()}.png")
+        FileOutputStream(file).use { out ->
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Share drawing"))
+    }
+
 
     Scaffold(
         topBar = {
@@ -61,29 +112,53 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // Clear
                     IconButton(
                         modifier = Modifier.testTag("clearCanvasButton"),
                         onClick = { viewModel.clearCanvas() }
-                    )
-                    {
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Clear Canvas"
                         )
                     }
+
+                    // Import (Photo Picker)
                     IconButton(
-                        modifier = Modifier.testTag("saveCanvasButton"),
+                        modifier = Modifier.testTag("importButton"),
                         onClick = {
-                            canvasViewRef?.let { view -> viewModel.saveDrawing(view) }
+                            photoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
                         }
                     ) {
                         Icon(
-                            // TODO: replace with save icon V
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground), // or use Icons.Default.Save if you add material icon
+                            imageVector = Icons.Default.Image,
+                            contentDescription = "Import Image"
+                        )
+                    }
+
+                    // Save (to Room + filesDir via repo)
+                    IconButton(
+                        modifier = Modifier.testTag("saveCanvasButton"),
+                        onClick = { canvasViewRef?.let { view -> viewModel.saveDrawing(view) } }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Save,
                             contentDescription = "Save Drawing"
                         )
                     }
 
+                    // Share (export to cache + FileProvider)
+                    IconButton(
+                        modifier = Modifier.testTag("shareButton"),
+                        onClick = { shareCurrentCanvas() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Drawing"
+                        )
+                    }
                 }
             )
         }
@@ -130,7 +205,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                         modifier = Modifier.testTag("brushSizeSlider"),
                         value = state.value.brushSize,
                         onValueChange = { viewModel.setBrushSize(it) },
-                        valueRange = 1f..60f,   // tune as you like
+                        valueRange = 1f..60f,   // tune as we see fit
                         steps = 60 - 2
                     )
                 }

@@ -11,8 +11,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
 
-class DrawingRepository(private val dao: DrawingDao,
-                        private val context: Context
+class DrawingRepository private constructor(
+    private val dao: DrawingDao,
+    private val context: Context
 ) {
     fun getAllDrawings(): Flow<List<DrawingEntity>> = dao.getAllDrawings()
 
@@ -47,7 +48,7 @@ class DrawingRepository(private val dao: DrawingDao,
         }
     }
 
-    suspend fun saveDrawingFromView(canvasView: View, dao: DrawingDao) {
+    suspend fun saveDrawingFromView(canvasView: View) {
         withContext(Dispatchers.IO) {
             val bitmap: Bitmap = canvasView.drawToBitmap()
 
@@ -65,5 +66,31 @@ class DrawingRepository(private val dao: DrawingDao,
             )
             dao.insertDrawing(entity)
         }
+    }
+
+    // Overwrite an existing drawing (same DB row + same file name)
+    suspend fun updateExistingFromView(canvasView: View, existing: DrawingEntity) {
+        withContext(Dispatchers.IO) {
+            val bitmap: Bitmap = canvasView.drawToBitmap()
+
+            // overwrite the same file name
+            val file = File(context.filesDir, existing.name)
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+
+            // replace the same row by using the same primary key id
+            val updated = existing.copy(content = bitmap)
+            dao.insertDrawing(updated) // REPLACE strategy in DAO keeps same id
+        }
+    }
+
+
+    companion object {
+        @Volatile private var INSTANCE: DrawingRepository? = null
+        fun getInstance(ctx: Context, dao: DrawingDao): DrawingRepository =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: DrawingRepository(dao, ctx.applicationContext).also { INSTANCE = it }
+            }
     }
 }
