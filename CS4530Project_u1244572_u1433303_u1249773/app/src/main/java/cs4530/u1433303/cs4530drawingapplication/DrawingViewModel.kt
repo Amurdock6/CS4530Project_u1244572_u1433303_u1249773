@@ -1,12 +1,14 @@
 package cs4530.u1433303.cs4530drawingapplication
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.view.View
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cs4530.u1433303.cs4530drawingapplication.data.DrawingDao
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,12 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 enum class BrushShape { Round, Square }
+
 data class Stroke(
     val points: List<Offset>,
     val color: Color,
     val strokeWidth: Float,
     val shape: BrushShape
 )
+
 data class DrawingUiState(
     val brushColor: Color = Color(0xFF000000),
     val brushSize: Float = 5f,
@@ -28,18 +32,23 @@ data class DrawingUiState(
     val backgroundImage: Bitmap? = null
 )
 
-class DrawingViewModel(private val repository: DrawingRepository, private val dao: DrawingDao) : ViewModel() {
+class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(DrawingUiState())
     val uiState = _uiState.asStateFlow()
-    var width = 1080;
-    var height = 1920;
+    private var editing: DrawingEntity? = null
 
-    fun setBrushColor(color: Color) {
-        _uiState.value = _uiState.value.copy(brushColor = color)
+    fun startNew() {
+        editing = null
+        clearCanvas()
+        _uiState.value = _uiState.value.copy(backgroundImage = null)
     }
 
-    fun setBrushSize(size: Float) {
-        _uiState.value = _uiState.value.copy(brushSize = size)
+    fun setBrushColor(c: Color) {
+        _uiState.value = _uiState.value.copy(brushColor = c)
+    }
+
+    fun setBrushSize(px: Float) {
+        _uiState.value = _uiState.value.copy(brushSize = px)
     }
 
     fun addStroke(points: List<Offset>) {
@@ -53,20 +62,38 @@ class DrawingViewModel(private val repository: DrawingRepository, private val da
         _uiState.value = _uiState.value.copy(brushShape = shape)
     }
 
-
     fun clearCanvas() {
         _uiState.value = _uiState.value.copy(strokes = emptyList())
     }
 
-    // TODO: somewhere in here we should have it so if you load a file then save it, it will overwrite the currently open file instead of making a new copy
     fun saveDrawing(canvasView: View) {
         viewModelScope.launch {
-            repository.saveDrawingFromView(canvasView, dao)
+            val existing = editing
+            if (existing != null) {
+                repository.updateExistingFromView(canvasView, existing)  // overwrite
+            } else {
+                repository.saveDrawingFromView(canvasView)               // create new
+            }
         }
     }
 
+
     fun loadDrawing(drawing: DrawingEntity) {
+        editing = drawing
         clearCanvas()
         _uiState.value = _uiState.value.copy(backgroundImage = drawing.content)
+    }
+
+
+    // Import from the system Photo Picker
+    fun importFromUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val bmp = context.contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream)
+            }
+            if (bmp != null) {
+                _uiState.value = _uiState.value.copy(backgroundImage = bmp)
+            }
+        }
     }
 }

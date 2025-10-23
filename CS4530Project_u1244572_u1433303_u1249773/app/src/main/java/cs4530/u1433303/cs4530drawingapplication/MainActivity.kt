@@ -44,6 +44,10 @@ import androidx.room.Room
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
 
 class MainActivity : ComponentActivity() {
 
@@ -57,12 +61,9 @@ class MainActivity : ComponentActivity() {
         ).fallbackToDestructiveMigration().build()
         val dao = db.drawingDao()
 
-        val repository = DrawingRepository(
-            dao,
-            context = applicationContext
-        )
+        val repository = DrawingRepository.getInstance(applicationContext, dao)
 
-        val viewModelFactory = ViewModelFactory(repository, dao)
+        val viewModelFactory = ViewModelFactory(repository)
 
         val mainViewModel: MainViewModel by viewModels { viewModelFactory }
         val drawingViewModel: DrawingViewModel by viewModels { viewModelFactory }
@@ -79,47 +80,41 @@ class MainActivity : ComponentActivity() {
 // put the application in here basically
 @Composable
 fun App(mainViewModel: MainViewModel, drawingViewModel: DrawingViewModel) {
-    var showSplash by remember { mutableStateOf(true) }
-    var splashDone by remember { mutableStateOf(false) }
-    var currentScreen by remember { mutableStateOf("main") }
+    val nav = rememberNavController()
 
-    LaunchedEffect(Unit) {
-        delay(900)
-        showSplash = false
-        delay(800)
-        splashDone = true
-    }
-
-    when {
-        showSplash || !splashDone -> {
-            AnimatedVisibility(
-                visible = showSplash,
-                exit = fadeOut(animationSpec = tween(1000))
-            ) {
-                SplashScreen()
+    NavHost(navController = nav, startDestination = "splash") {
+        composable("splash") {
+            SplashScreen()
+            // Navigate to main after animation delay (~1.7s total previously)
+            LaunchedEffect(Unit) {
+                // keep existing splash timing feel
+                kotlinx.coroutines.delay(1700)
+                nav.navigate("main") {
+                    popUpTo("splash") { inclusive = true }
+                }
             }
         }
-
-        splashDone && currentScreen == "main" -> {
+        composable("main") {
             MainScreen(
                 viewModel = mainViewModel,
-                onNewDrawing = { currentScreen = "drawing" },
+                onNewDrawing = {
+                    drawingViewModel.startNew()
+                    nav.navigate("editor")
+                },
                 onOpenDrawing = { drawing ->
                     drawingViewModel.loadDrawing(drawing)
-                    currentScreen = "drawing"
+                    nav.navigate("editor")
                 }
             )
         }
-
-        splashDone && currentScreen == "drawing" -> {
+        composable("editor") {
             DrawingScreen(
                 viewModel = drawingViewModel,
-                onBack = { currentScreen = "main" }
+                onBack = { nav.popBackStack() }
             )
         }
     }
 }
-
 
 @Composable
 fun DrawingScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
