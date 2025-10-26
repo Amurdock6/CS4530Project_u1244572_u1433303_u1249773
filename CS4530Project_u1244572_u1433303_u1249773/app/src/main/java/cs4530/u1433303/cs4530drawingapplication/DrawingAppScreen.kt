@@ -44,6 +44,7 @@ import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
@@ -55,7 +56,7 @@ import java.io.FileOutputStream
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
-
+import androidx.compose.material.icons.filled.Undo
 
 
 @OptIn(ExperimentalMaterial3Api::class) // using this for TopAppBar, API is stable enough
@@ -112,6 +113,16 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // Undo
+                    IconButton(
+                        modifier = Modifier.testTag("DrawingAppScreenUndoButton"),
+                        onClick = {viewModel.undoLastStroke()}
+                    ){
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
+                            contentDescription = "Undo Last Draw"
+                        )
+                    }
                     // Clear
                     IconButton(
                         modifier = Modifier.testTag("clearCanvasButton"),
