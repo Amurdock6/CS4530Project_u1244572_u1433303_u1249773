@@ -12,6 +12,9 @@ interface DrawingDao {
     @Query("SELECT * FROM drawings ORDER BY id DESC")
     fun getAllDrawings(): Flow<List<DrawingEntity>>
 
+    @Query("SELECT COUNT(*) FROM drawings")
+    fun getNumberOfDrawings(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDrawing(drawing: DrawingEntity)
 
