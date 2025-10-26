@@ -9,6 +9,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
@@ -82,13 +83,6 @@ class DrawingAppScreenEspressoTests {
     fun stall(){
         Thread.sleep(TEST_STALL_PERIOD)
     }
-
-    // TODO: Split tests into smaller unit tests
-    //  (i.e: a test to check if a composable exists, then a test that just interfaces with
-    //  with the composable whilst assuming it exists)
-
-    // TODO: .onNodeWithTag() may be more ideal for readability, but onNode(hasTestTag()) works fine
-
     /**
      * 3 part test that checks if we can draws on the DrawingAppScreen's
      * drawCanvas composable.
@@ -127,7 +121,7 @@ class DrawingAppScreenEspressoTests {
      * than default (see INITIAL_PEN_SIZE constant)
      */
     @Test
-    fun setBrushSizeLargeAndDrawTest(){
+    fun setBrushSizeLargeTest(){
         composeTestRule.onNode(hasTestTag("brushSizeSlider"))
             .assertExists()
             .assertIsDisplayed()
@@ -154,6 +148,26 @@ class DrawingAppScreenEspressoTests {
         composeTestRule.onNode(hasTestTag("clearCanvasButton"))
             .performClick()
         assertTrue(vm.uiState.value.strokes.isEmpty())
+    }
+
+    /**
+     * Checks that the DrawingAppScreenUndoButton exists, is displayed,
+     * and will actually remove the last stroke made in the DrawingViewModel's
+     * list of Strokes.
+     */
+    @Test
+    fun undoTest(){
+        composeTestRule.onNode(hasTestTag("DrawingAppScreenUndoButton"))
+            .assertExists()
+            .assertIsDisplayed()
+        composeTestRule.onNode(hasTestTag("drawCanvas"))
+            .performTouchInput { swipeUp() }
+            .performTouchInput { swipeRight() }
+        assertTrue(vm.uiState.value.strokes.size == 2)
+        Thread.sleep(1000)
+        composeTestRule.onNode(hasTestTag("DrawingAppScreenUndoButton"))
+            .performClick()
+        assertTrue(vm.uiState.value.strokes.size == 1)
     }
 
     // TODO: Need a way to conduct a color picking test through espresso;
