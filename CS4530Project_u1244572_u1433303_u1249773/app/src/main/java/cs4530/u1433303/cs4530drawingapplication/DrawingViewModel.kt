@@ -66,6 +66,13 @@ class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() 
         _uiState.value = _uiState.value.copy(strokes = emptyList())
     }
 
+    fun undoLastStroke(){
+        val s = _uiState.value
+        _uiState.value = _uiState.value.copy(
+            strokes = s.strokes.dropLast(1)
+        )
+    }
+
     fun saveDrawing(canvasView: View) {
         viewModelScope.launch {
             val existing = editing
