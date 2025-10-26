@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.testTag
 import androidx.room.Room
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
@@ -146,7 +147,8 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onOpenDrawing(drawing) }
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .testTag(drawing.name), // For espresso testing, the drawing Name is used as a tag
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = drawing.name)
