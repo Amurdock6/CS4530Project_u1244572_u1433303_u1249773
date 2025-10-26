@@ -1,5 +1,6 @@
 package cs4530.u1433303.cs4530drawingapplication
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,7 +12,13 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingDao
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
+import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -28,11 +35,19 @@ class DrawingAppScreenEspressoTests {
     // vm.uiState.value holds pen properties
     lateinit var vm : DrawingViewModel
 
+    // Context, dao, and repo references required to get the ViewModel to be
+    // initialized. None of these are being tested. Purely for instantiation purposes.
+    lateinit var appContext : Context
+    lateinit var dao : DrawingDao
+    lateinit var repo : DrawingRepository
+
     // Constants for either initialization or testing against changes
     private val INITIAL_PEN_SIZE = 25.0f
     private val INITIAL_PEN_COLOR = Color.Red
     private val INITIAL_PEN_SHAPE = BrushShape.Round
     private val TEST_STALL_PERIOD : Long = 2000 // in milliseconds
+
+
 
     /**
      * Initializes a new DrawingViewModel using the Constant values
@@ -40,14 +55,23 @@ class DrawingAppScreenEspressoTests {
      */
     @Before
     fun setUp(){
+        appContext = ApplicationProvider.getApplicationContext()
+        val db = Room.databaseBuilder(
+            appContext,
+            DrawingDatabase::class.java,
+            "drawing_db"
+        ).fallbackToDestructiveMigration().build()
+        dao = db.drawingDao()
 
-        vm = DrawingViewModel()
+        repo = DrawingRepository.getInstance(appContext, dao)
+
+        vm = DrawingViewModel(repo)
         vm.setBrushShape(INITIAL_PEN_SHAPE)
         vm.setBrushColor(INITIAL_PEN_COLOR)
         vm.setBrushSize(INITIAL_PEN_SIZE)
 
         composeTestRule.setContent {
-            DrawingAppScreen(vm)
+            DrawingAppScreen(vm, onBack = rememberNavController()::popBackStack)
         }
     }
 
