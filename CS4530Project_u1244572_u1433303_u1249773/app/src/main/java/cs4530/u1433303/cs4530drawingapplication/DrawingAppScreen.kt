@@ -1,5 +1,10 @@
 package cs4530.u1433303.cs4530drawingapplication
 
+import android.content.Intent
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,11 +17,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -35,35 +46,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import android.content.Intent
-import android.graphics.Bitmap
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.core.view.drawToBitmap
 import java.io.File
 import java.io.FileOutputStream
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Undo
 
 
 @OptIn(ExperimentalMaterial3Api::class) // using this for TopAppBar, API is stable enough
-// but we probably should refactor at some point to avoid this and just use row and column stuffs
 @Composable
 fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
-    val state = viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     var showColorDialog by remember { mutableStateOf(false) }
     var canvasViewRef by remember { mutableStateOf<ComposeView?>(null) }
 
@@ -113,6 +109,15 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // Vision Labels Toggle
+                    IconButton(
+                        onClick = { viewModel.toggleVisionLabels() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Label,
+                            contentDescription = "Show/Hide Vision Labels"
+                        )
+                    }
                     // Undo
                     IconButton(
                         modifier = Modifier.testTag("DrawingAppScreenUndoButton"),
@@ -174,70 +179,88 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
-        ) {
-            // Canvas
-            AndroidView(
-                factory = { ctx ->
-                    ComposeView(ctx).apply {
-                        setContent {
-                            DrawingCanvas(viewModel = viewModel)
-                        }
-                        canvasViewRef = this
-                    }
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .testTag("drawCanvas")
-            )
-
-            // --- Pen bar ---
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+        Box(modifier = Modifier.padding(innerPadding)) {
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Color preview (tap to open dialog)
-                Box(
+                // Canvas
+                AndroidView(
+                    factory = { ctx ->
+                        ComposeView(ctx).apply {
+                            setContent {
+                                DrawingCanvas(viewModel = viewModel)
+                            }
+                            canvasViewRef = this
+                        }
+                    },
                     modifier = Modifier
-                        .size(32.dp)
-                        .background(state.value.brushColor, shape = CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .4f), CircleShape)
-                        .clickable { showColorDialog = true }
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .testTag("drawCanvas")
                 )
 
-                Spacer(Modifier.width(12.dp))
-
-                // Size slider
-                Column(Modifier.weight(1f)) {
-                    Text("Size: ${state.value.brushSize.toInt()}")
-                    Slider(
-                        modifier = Modifier.testTag("brushSizeSlider"),
-                        value = state.value.brushSize,
-                        onValueChange = { viewModel.setBrushSize(it) },
-                        valueRange = 1f..60f,   // tune as we see fit
-                        steps = 60 - 2
+                // --- Pen bar ---
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Color preview (tap to open dialog)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(state.brushColor, shape = CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .4f), CircleShape)
+                            .clickable { showColorDialog = true }
                     )
+
+                    Spacer(Modifier.width(12.dp))
+
+                    // Size slider
+                    Column(Modifier.weight(1f)) {
+                        Text("Size: ${state.brushSize.toInt()}")
+                        Slider(
+                            modifier = Modifier.testTag("brushSizeSlider"),
+                            value = state.brushSize,
+                            onValueChange = { viewModel.setBrushSize(it) },
+                            valueRange = 1f..60f,   // tune as we see fit
+                            steps = 60 - 2
+                        )
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    // Shape: Round | Square (simple 2-state chips)
+                    Row {
+                        FilterChip(
+                            modifier = Modifier.testTag("circleBrushButton"),
+                            selected = state.brushShape == BrushShape.Round,
+                            onClick = { viewModel.setBrushShape(BrushShape.Round) },
+                            label = { Text("○") }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        FilterChip(
+                            modifier = Modifier.testTag("squareBrushButton"),
+                            selected = state.brushShape == BrushShape.Square,
+                            onClick = { viewModel.setBrushShape(BrushShape.Square) },
+                            label = { Text("▢") }
+                        )
+                    }
                 }
-
-                Spacer(Modifier.width(12.dp))
-
-                // Shape: Round | Square (simple 2-state chips)
-                Row {
-                    FilterChip(
-                        modifier = Modifier.testTag("circleBrushButton"),
-                        selected = state.value.brushShape == BrushShape.Round,
-                        onClick = { viewModel.setBrushShape(BrushShape.Round) },
-                        label = { Text("○") }
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    FilterChip(
-                        modifier = Modifier.testTag("squareBrushButton"),
-                        selected = state.value.brushShape == BrushShape.Square,
-                        onClick = { viewModel.setBrushShape(BrushShape.Square) },
-                        label = { Text("▢") }
-                    )
+            }
+            if (state.showVisionLabels) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                ) {
+                    items(state.visionLabels) { label ->
+                        Text(
+                            text = label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -245,7 +268,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
 
     if (showColorDialog) {
         ColorPickerDialog(
-            initial = state.value.brushColor,
+            initial = state.brushColor,
             onConfirm = { c -> viewModel.setBrushColor(c); showColorDialog = false },
             onDismiss = { showColorDialog = false }
         )

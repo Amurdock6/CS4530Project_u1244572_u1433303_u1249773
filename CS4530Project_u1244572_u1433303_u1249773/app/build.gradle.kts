@@ -2,8 +2,20 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
+
+val secretsFile = rootProject.file("secrets.properties")
+val secretsMap = if (secretsFile.exists()) {
+    secretsFile.readLines()
+        .filter { it.contains("=") }
+        .map { it.split("=") }
+        .associate { it[0].trim() to it[1].trim() }
+} else {
+    emptyMap()
+}
+val apiKey = secretsMap["CLOUD_VISION_API_KEY"] ?: ""
 
 android {
     namespace = "cs4530.u1433303.cs4530drawingapplication"
@@ -17,6 +29,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "CLOUD_VISION_API_KEY", apiKey)
     }
 
     buildTypes {
@@ -38,7 +52,21 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "google/protobuf/*.proto"
+            excludes += "com/google/protobuf/*.proto"
+        }
+    }
+    
 }
 
 dependencies {
@@ -71,4 +99,11 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(kotlin("test"))
+    
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
 }
