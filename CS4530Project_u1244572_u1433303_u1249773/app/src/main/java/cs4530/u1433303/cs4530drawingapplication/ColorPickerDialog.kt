@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +29,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.android.material.textfield.TextInputEditText
 import com.skydoves.colorpickerview.ColorPickerView
-import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
+import com.skydoves.colorpickerview.listeners.ColorListener
 import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
 
@@ -96,34 +95,27 @@ fun ColorPickerDialog(
                         }
 
                         fun applyColor(colorInt: Int) {
-                            preview.setBackgroundColor(colorInt)
                             selected = Color(colorInt)
                             setHexField(colorInt)
                             updatePercentLabels(colorInt)
+                            preview.setBackgroundColor(colorInt)
+                            preview.alpha = android.graphics.Color.alpha(colorInt) / 255f
 
                             // Optionally move the wheel/rails to this color too:
                             picker.setInitialColor(colorInt)
+
                         }
 
-                        // Initial color
-                        val argb = android.graphics.Color.argb(
-                            (initial.alpha * 255).toInt(),
-                            (initial.red * 255).toInt(),
-                            (initial.green * 255).toInt(),
-                            (initial.blue * 255).toInt()
-                        )
                         picker.attachBrightnessSlider(bSlider)
                         picker.attachAlphaSlider(aSlider)
-                        applyColor(argb)
 
                         // Keep labels & HEX in sync while picking
                         picker.setColorListener(
-                            ColorEnvelopeListener { envelope, _ ->
-                                val c = envelope.color
-                                preview.setBackgroundColor(c)
-                                selected = Color(c)
-                                setHexField(c)
-                                updatePercentLabels(c)
+                            ColorListener { color, _ ->
+                                preview.setBackgroundColor(color)
+                                selected = Color(color)
+                                setHexField(color)
+                                updatePercentLabels(color)
                             }
                         )
 
