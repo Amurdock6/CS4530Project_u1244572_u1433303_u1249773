@@ -62,9 +62,9 @@ class MainActivity : ComponentActivity() {
         ).fallbackToDestructiveMigration().build()
         val dao = db.drawingDao()
 
-        val repository = DrawingRepository.getInstance(applicationContext, dao)
+        val drawingRepository = DrawingRepository.getInstance(applicationContext, dao)
 
-        val viewModelFactory = ViewModelFactory(repository)
+        val viewModelFactory = ViewModelFactory(drawingRepository)
 
         val mainViewModel: MainViewModel by viewModels { viewModelFactory }
         val drawingViewModel: DrawingViewModel by viewModels { viewModelFactory }

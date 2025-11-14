@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -29,18 +30,20 @@ data class DrawingUiState(
     val brushSize: Float = 5f,
     val brushShape: BrushShape = BrushShape.Round,
     val strokes: List<Stroke> = emptyList(),
-    val backgroundImage: Bitmap? = null
+    val backgroundImage: Bitmap? = null,
+    val visionLabels: List<String> = emptyList(),
+    val showVisionLabels: Boolean = false
 )
 
-class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() {
+class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(DrawingUiState())
     val uiState = _uiState.asStateFlow()
     private var editing: DrawingEntity? = null
+    private val cloudVisionRepository by lazy { CloudVisionRepository() }
 
     fun startNew() {
         editing = null
         clearCanvas()
-        _uiState.value = _uiState.value.copy(backgroundImage = null)
     }
 
     fun setBrushColor(c: Color) {
@@ -63,7 +66,33 @@ class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() 
     }
 
     fun clearCanvas() {
-        _uiState.value = _uiState.value.copy(strokes = emptyList())
+        _uiState.value = _uiState.value.copy(
+            strokes = emptyList(),
+            backgroundImage = null,
+            visionLabels = emptyList()
+        )
+    }
+
+    fun saveDrawing(canvasView: View) {
+        viewModelScope.launch {
+            val existing = editing
+            if (existing != null) {
+                drawingRepository.updateExistingFromView(canvasView, existing)  // overwrite
+            } else {
+                drawingRepository.saveDrawingFromView(canvasView)               // create new
+            }
+        }
+    }
+
+    fun loadDrawing(drawing: DrawingEntity) {
+        editing = drawing
+        _uiState.value = _uiState.value.copy(
+            strokes = emptyList(),
+            backgroundImage = drawing.content,
+            visionLabels = emptyList()
+        )
+        analyzeImage(drawing.content)
+        Log.d("DrawingViewModel", "Drawing Content: $drawing")
     }
 
     fun undoLastStroke(){
@@ -73,24 +102,10 @@ class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() 
         )
     }
 
-    fun saveDrawing(canvasView: View) {
-        viewModelScope.launch {
-            val existing = editing
-            if (existing != null) {
-                repository.updateExistingFromView(canvasView, existing)  // overwrite
-            } else {
-                repository.saveDrawingFromView(canvasView)               // create new
-            }
-        }
+    fun toggleVisionLabels() {
+        val s = _uiState.value
+        _uiState.value = s.copy(showVisionLabels = !s.showVisionLabels)
     }
-
-
-    fun loadDrawing(drawing: DrawingEntity) {
-        editing = drawing
-        clearCanvas()
-        _uiState.value = _uiState.value.copy(backgroundImage = drawing.content)
-    }
-
 
     // Import from the system Photo Picker
     fun importFromUri(context: Context, uri: Uri) {
@@ -99,7 +114,23 @@ class DrawingViewModel(private val repository: DrawingRepository) : ViewModel() 
                 BitmapFactory.decodeStream(stream)
             }
             if (bmp != null) {
-                _uiState.value = _uiState.value.copy(backgroundImage = bmp)
+                _uiState.value = _uiState.value.copy(
+                    strokes = emptyList(),
+                    backgroundImage = bmp,
+                    visionLabels = emptyList()
+                )
+                analyzeImage(bmp)
+            }
+        }
+    }
+
+    private fun analyzeImage(bitmap: Bitmap) {
+        viewModelScope.launch {
+            val response = cloudVisionRepository.analyzeImage(bitmap)
+            response?.responses?.firstOrNull()?.labelAnnotations?.let { labels ->
+                val descriptions = labels.map { it.description }
+                _uiState.value = _uiState.value.copy(visionLabels = descriptions)
+                Log.d("DrawingViewModel", "Vision API labels: $descriptions")
             }
         }
     }
