@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.room.Room
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
@@ -143,17 +144,30 @@ fun MainScreen(
 
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(drawings) { drawing ->
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onOpenDrawing(drawing) }
                         .padding(16.dp)
                         .testTag(drawing.name), // For espresso testing, the drawing Name is used as a tag
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = drawing.name)
-                    IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    Image(
+                        bitmap = drawing.content.asImageBitmap(),
+                        contentDescription = "Drawing thumbnail for ${'$'}{drawing.name}",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = drawing.name)
+                        IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
                     }
                 }
             }
