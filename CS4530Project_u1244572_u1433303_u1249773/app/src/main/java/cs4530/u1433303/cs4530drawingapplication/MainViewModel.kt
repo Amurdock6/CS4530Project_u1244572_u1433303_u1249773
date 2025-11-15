@@ -25,4 +25,10 @@ class MainViewModel(private val repository: DrawingRepository) : ViewModel() {
             repository.deleteDrawing(drawing)
         }
     }
+
+    fun renameDrawing(drawing: DrawingEntity, newName: String) {
+        viewModelScope.launch {
+            repository.renameDrawing(drawing, newName)
+        }
+    }
 }

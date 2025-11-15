@@ -1,4 +1,4 @@
-package cs4530.u1433303.cs4530drawingapplication
+﻿package cs4530.u1433303.cs4530drawingapplication
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -25,7 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,6 +63,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
     val state by viewModel.uiState.collectAsState()
     var showColorDialog by remember { mutableStateOf(false) }
     var canvasViewRef by remember { mutableStateOf<ComposeView?>(null) }
+    var labelsExpanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -112,10 +113,10 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                 actions = {
                     // Vision Labels Toggle
                     IconButton(
-                        onClick = { viewModel.toggleVisionLabels() }
+                        onClick = { viewModel.toggleVisionLabels(); labelsExpanded = false }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Label,
+                            imageVector = Icons.Default.AutoAwesome,
                             contentDescription = "Show/Hide Vision Labels"
                         )
                     }
@@ -240,51 +241,59 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                             modifier = Modifier.testTag("circleBrushButton"),
                             selected = state.brushShape == BrushShape.Round,
                             onClick = { viewModel.setBrushShape(BrushShape.Round) },
-                            label = { Text("○") }
+                            label = { Text("â—‹") }
                         )
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             modifier = Modifier.testTag("squareBrushButton"),
                             selected = state.brushShape == BrushShape.Square,
                             onClick = { viewModel.setBrushShape(BrushShape.Square) },
-                            label = { Text("▢") }
+                            label = { Text("â–¢") }
                         )
                     }
                 }
             }
             if (state.showVisionLabels) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                ) {
-                    // Objects list with confidence
-                    items(state.visionObjects) { o ->
-                        Text(
-                            text = "${o.name} (${(o.score * 100).toInt()}%)",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-                    // Labels list
-                    items(state.visionLabels) { label ->
-                        Text(
-                            text = label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-                    // Graceful message when nothing returned
-                    if (state.visionObjects.isEmpty() && state.visionLabels.isEmpty() && state.visionMessage != null) {
-                        item {
+                // Compact HUD instead of full drop-down list
+                Box(modifier = Modifier.fillMaxSize()) {
+                    androidx.compose.material3.Surface(
+                        tonalElevation = 6.dp,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = state.visionMessage ?: "",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
+                                text = "AI: ${state.visionObjects.size} objs - ${state.visionLabels.size} labels",
+                                style = MaterialTheme.typography.bodyMedium
                             )
+                                                        val shownLabels = if (labelsExpanded) state.visionLabels else state.visionLabels.take(3)
+                            if (shownLabels.isNotEmpty()) {
+                                Spacer(Modifier.width(4.dp))
+                                shownLabels.forEach { lbl ->
+                                    Text(text = "- $lbl", style = MaterialTheme.typography.bodySmall)
+                                }
+                                if (state.visionLabels.size > 3) {
+                                    val remaining = state.visionLabels.size - 3
+                                    if (!labelsExpanded) {
+                                        Text(
+                                            text = "+$remaining more",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.clickable { labelsExpanded = true }
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Show less",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.clickable { labelsExpanded = false }
+                                        )
+                                    }
+                                }
+                            }
+                            if (state.visionObjects.isEmpty() && state.visionLabels.isEmpty() && state.visionMessage != null) {
+                                Text(text = state.visionMessage ?: "No detections", style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
@@ -306,3 +315,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
         )
     }
 }
+
+
+
+

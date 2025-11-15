@@ -1,4 +1,4 @@
-package cs4530.u1433303.cs4530drawingapplication
+﻿package cs4530.u1433303.cs4530drawingapplication
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -37,10 +37,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.room.Room
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingDatabase
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
@@ -133,6 +138,8 @@ fun MainScreen(
     onOpenDrawing: (DrawingEntity) -> Unit
 ) {
     val drawings by viewModel.drawings.collectAsState()
+    var renameTarget by remember { mutableStateOf<DrawingEntity?>(null) }
+    var renameText by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
@@ -151,9 +158,22 @@ fun MainScreen(
                         .testTag(drawing.name), // For espresso testing, the drawing Name is used as a tag
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = drawing.name)
-                    IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    Text(
+                        text = drawing.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row {
+                        IconButton(onClick = {
+                            renameTarget = drawing
+                            renameText = drawing.name
+                        }) {
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = "Rename")
+                        }
+                        IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
                     }
                 }
             }
@@ -167,6 +187,34 @@ fun MainScreen(
         ) {
             Text("New Drawing")
         }
+    }
+
+    // Rename dialog
+    if (renameTarget != null) {
+        AlertDialog(
+            onDismissRequest = { renameTarget = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = renameText.trim()
+                    if (t.isNotEmpty()) {
+                        viewModel.renameDrawing(renameTarget!!, t)
+                    }
+                    renameTarget = null
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTarget = null }) { Text("Cancel") }
+            },
+            title = { Text("Rename Drawing") },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    singleLine = true,
+                    label = { Text("File name") }
+                )
+            }
+        )
     }
 }
 
@@ -185,3 +233,5 @@ fun SplashScreen() {
         )
     }
 }
+
+

@@ -48,6 +48,44 @@ class DrawingRepository private constructor(
         }
     }
 
+    suspend fun renameDrawing(entity: DrawingEntity, newName: String) {
+        withContext(Dispatchers.IO) {
+            val sanitized = sanitizeFileName(newName)
+            val oldFile = File(context.filesDir, entity.name)
+
+            // If name unchanged, nothing to do
+            if (entity.name == sanitized) return@withContext
+
+            // Find a non-colliding file name
+            var target = File(context.filesDir, sanitized)
+            if (!sanitized.endsWith(".png", ignoreCase = true)) {
+                target = File(context.filesDir, "$sanitized.png")
+            }
+            var finalFile = target
+            var idx = 1
+            val base = finalFile.nameWithoutExtension
+            while (finalFile.exists()) {
+                finalFile = File(context.filesDir, "${base}_$idx.png")
+                idx++
+            }
+
+            // Attempt rename on disk
+            if (oldFile.exists()) {
+                oldFile.renameTo(finalFile)
+            }
+
+            // Update DB row with new file name
+            val updated = entity.copy(name = finalFile.name)
+            dao.insertDrawing(updated)
+        }
+    }
+
+    private fun sanitizeFileName(input: String): String {
+        val trimmed = input.trim().ifBlank { "untitled" }
+        // Allow letters, numbers, space, dash, underscore, dot
+        return trimmed.replace(Regex("[^A-Za-z0-9 ._-]"), "_")
+    }
+
     suspend fun saveDrawingFromView(canvasView: View) {
         withContext(Dispatchers.IO) {
             val bitmap: Bitmap = canvasView.drawToBitmap()
