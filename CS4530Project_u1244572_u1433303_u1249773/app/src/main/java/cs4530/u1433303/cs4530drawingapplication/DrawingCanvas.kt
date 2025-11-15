@@ -78,5 +78,23 @@ fun DrawingCanvas(
                 )
             )
         }
+
+        // Draw AI object overlays (polygons) when toggled on
+        if (state.value.showVisionLabels && state.value.visionObjects.isNotEmpty()) {
+            state.value.visionObjects.forEach { obj ->
+                val pts = obj.vertices
+                if (pts.isNotEmpty()) {
+                    val poly = Path().apply {
+                        moveTo(pts.first().x, pts.first().y)
+                        pts.drop(1).forEach { lineTo(it.x, it.y) }
+                        close()
+                    }
+                    // Semi-transparent fill
+                    drawPath(poly, color = obj.color.copy(alpha = 0.18f))
+                    // Solid outline
+                    drawPath(poly, color = obj.color, style = Stroke(width = 3f))
+                }
+            }
+        }
     }
 }

@@ -32,7 +32,10 @@ data class DrawingUiState(
     val strokes: List<Stroke> = emptyList(),
     val backgroundImage: Bitmap? = null,
     val visionLabels: List<String> = emptyList(),
-    val showVisionLabels: Boolean = false
+    val showVisionLabels: Boolean = false,
+    val visionObjects: List<DetectedObject> = emptyList(),
+    val isAnalyzing: Boolean = false,
+    val visionMessage: String? = null
 )
 
 class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewModel() {
@@ -69,7 +72,10 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
             backgroundImage = null,
-            visionLabels = emptyList()
+            visionLabels = emptyList(),
+            visionObjects = emptyList(),
+            isAnalyzing = false,
+            visionMessage = null
         )
     }
 
@@ -89,7 +95,9 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
             backgroundImage = drawing.content,
-            visionLabels = emptyList()
+            visionLabels = emptyList(),
+            visionObjects = emptyList(),
+            visionMessage = null
         )
         analyzeImage(drawing.content)
         Log.d("DrawingViewModel", "Drawing Content: $drawing")
@@ -117,7 +125,9 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
                 _uiState.value = _uiState.value.copy(
                     strokes = emptyList(),
                     backgroundImage = bmp,
-                    visionLabels = emptyList()
+                    visionLabels = emptyList(),
+                    visionObjects = emptyList(),
+                    visionMessage = null
                 )
                 analyzeImage(bmp)
             }
@@ -126,12 +136,65 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
 
     private fun analyzeImage(bitmap: Bitmap) {
         viewModelScope.launch {
-            val response = cloudVisionRepository.analyzeImage(bitmap)
-            response?.responses?.firstOrNull()?.labelAnnotations?.let { labels ->
-                val descriptions = labels.map { it.description }
-                _uiState.value = _uiState.value.copy(visionLabels = descriptions)
-                Log.d("DrawingViewModel", "Vision API labels: $descriptions")
+            // show loading
+            _uiState.value = _uiState.value.copy(isAnalyzing = true, visionMessage = null)
+
+            try {
+                val response = cloudVisionRepository.analyzeImage(bitmap)
+
+                var descriptions: List<String> = emptyList()
+                var detected = emptyList<DetectedObject>()
+
+                response?.responses?.firstOrNull()?.labelAnnotations?.let { labels ->
+                    descriptions = labels.map { it.description }
+                    Log.d("DrawingViewModel", "Vision API labels: $descriptions")
+                }
+
+                response?.responses?.firstOrNull()?.localizedObjectAnnotations?.let { objs ->
+                    val w = bitmap.width.toFloat()
+                    val h = bitmap.height.toFloat()
+
+                    val palette = listOf(
+                        Color(0xFFE53935), Color(0xFFD81B60), Color(0xFF8E24AA),
+                        Color(0xFF5E35B1), Color(0xFF3949AB), Color(0xFF1E88E5),
+                        Color(0xFF00897B), Color(0xFF43A047), Color(0xFFFDD835),
+                        Color(0xFFFB8C00)
+                    )
+
+                    detected = objs.mapIndexed { idx, o ->
+                        val verts = o.boundingPoly.normalizedVertices.map { v ->
+                            Offset((v.x ?: 0f) * w, (v.y ?: 0f) * h)
+                        }
+                        DetectedObject(
+                            name = o.name,
+                            score = o.score,
+                            vertices = verts,
+                            color = palette[idx % palette.size]
+                        )
+                    }
+                }
+
+                val message = if (response == null) {
+                    "Vision request failed"
+                } else if (descriptions.isEmpty() && detected.isEmpty()) {
+                    "No detections"
+                } else null
+
+                _uiState.value = _uiState.value.copy(
+                    visionLabels = descriptions,
+                    visionObjects = detected,
+                    visionMessage = message
+                )
+            } finally {
+                _uiState.value = _uiState.value.copy(isAnalyzing = false)
             }
         }
     }
 }
+
+data class DetectedObject(
+    val name: String,
+    val score: Float,
+    val vertices: List<Offset>,
+    val color: Color
+)

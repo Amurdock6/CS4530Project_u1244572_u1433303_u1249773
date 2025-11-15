@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -117,6 +118,10 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                             imageVector = Icons.Default.Label,
                             contentDescription = "Show/Hide Vision Labels"
                         )
+                    }
+                    // Small count indicator for labels
+                    if (state.visionLabels.isNotEmpty()) {
+                        Text("${state.visionLabels.size}")
                     }
                     // Undo
                     IconButton(
@@ -253,14 +258,41 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
                 ) {
+                    // Objects list with confidence
+                    items(state.visionObjects) { o ->
+                        Text(
+                            text = "${o.name} (${(o.score * 100).toInt()}%)",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                    // Labels list
                     items(state.visionLabels) { label ->
                         Text(
                             text = label,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
+                    // Graceful message when nothing returned
+                    if (state.visionObjects.isEmpty() && state.visionLabels.isEmpty() && state.visionMessage != null) {
+                        item {
+                            Text(
+                                text = state.visionMessage ?: "",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            // Loading overlay
+            if (state.isAnalyzing) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
         }

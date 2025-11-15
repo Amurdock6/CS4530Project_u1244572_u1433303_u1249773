@@ -1,3 +1,5 @@
+﻿import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,12 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
+// Load API key from local.properties, secrets.properties, or environment
+val localProps = Properties()
+val f = rootProject.file("local.properties")
+if (f.exists()) {
+    f.inputStream().use { localProps.load(it) }
+}
 val secretsFile = rootProject.file("secrets.properties")
 val secretsMap = if (secretsFile.exists()) {
     secretsFile.readLines()
@@ -15,7 +23,11 @@ val secretsMap = if (secretsFile.exists()) {
 } else {
     emptyMap()
 }
-val apiKey = secretsMap["CLOUD_VISION_API_KEY"] ?: ""
+val apiKeyRaw = localProps.getProperty("CLOUD_VISION_API_KEY")
+    ?: secretsMap["CLOUD_VISION_API_KEY"]
+    ?: System.getenv("CLOUD_VISION_API_KEY")
+    ?: ""
+val quotedApiKey = if (apiKeyRaw.isBlank()) "\"\"" else "\"$apiKeyRaw\""
 
 android {
     namespace = "cs4530.u1433303.cs4530drawingapplication"
@@ -30,7 +42,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "CLOUD_VISION_API_KEY", apiKey)
+        buildConfigField("String", "CLOUD_VISION_API_KEY", quotedApiKey)
     }
 
     buildTypes {
@@ -106,4 +118,13 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    // Silence SLF4J warnings on Android (optional but reduces log noise)
+    implementation("org.slf4j:slf4j-android:1.7.36")
+
 }
+
+
+
+
+
+
