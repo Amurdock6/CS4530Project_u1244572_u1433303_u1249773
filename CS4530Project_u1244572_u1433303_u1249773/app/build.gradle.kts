@@ -31,7 +31,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "CLOUD_VISION_API_KEY", apiKey)
+        buildConfigField("String", "CLOUD_VISION_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -89,7 +89,7 @@ dependencies {
     implementation("com.github.skydoves:colorpickerview:2.3.0")
     implementation("com.google.android.material:material:1.13.0")
     implementation(libs.androidx.ui.viewbinding)
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     testImplementation(libs.junit)
