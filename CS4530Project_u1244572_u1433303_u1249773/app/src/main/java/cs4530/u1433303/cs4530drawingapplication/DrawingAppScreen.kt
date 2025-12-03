@@ -256,7 +256,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
 
                         Column(Modifier.weight(1f)) {
                             Text(
-                                "Brush size: ${'$'}{state.brushSize.toInt()}",
+                                "Brush size: ${state.brushSize.toInt()}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Slider(
