@@ -71,6 +71,7 @@ class CloudSyncRepository private constructor() {
         bitmap: Bitmap
     ): SharedDrawingMetadata? {
         val senderId = auth.currentUser?.uid ?: return null
+        val senderEmail = auth.currentUser?.email ?: "anonymous"
         val fileName = "shared_${UUID.randomUUID()}.png"
         val ref = storage.reference.child("shared_drawings/$senderId/$fileName")
         ref.putBytes(bitmap.toPngBytes()).await()
@@ -80,6 +81,7 @@ class CloudSyncRepository private constructor() {
         val payload = mapOf(
             "imageUrl" to url,
             "senderId" to senderId,
+            "senderEmail" to senderEmail,
             "receiverEmail" to receiverEmail.lowercase(),
             "timestamp" to Timestamp.now(),
             "title" to title
@@ -92,6 +94,7 @@ class CloudSyncRepository private constructor() {
             imageUrl = url,
             timestamp = ts,
             senderId = senderId,
+            senderEmail = senderEmail,
             receiverEmail = receiverEmail
         )
     }
@@ -108,6 +111,7 @@ class CloudSyncRepository private constructor() {
             val title = doc.getString("title") ?: "Shared drawing"
             val ts = doc.getTimestamp("timestamp")?.toDate()?.time ?: 0L
             val senderId = doc.getString("senderId") ?: ""
+            val senderEmail = doc.getString("senderEmail") ?: "anonymous"
             val receiver = doc.getString("receiverEmail") ?: email
             SharedDrawingMetadata(
                 id = doc.id,
@@ -115,6 +119,7 @@ class CloudSyncRepository private constructor() {
                 imageUrl = url,
                 timestamp = ts,
                 senderId = senderId,
+                senderEmail = senderEmail,
                 receiverEmail = receiver
             )
         }.sortedByDescending { it.timestamp }
@@ -131,6 +136,7 @@ class CloudSyncRepository private constructor() {
             val url = doc.getString("imageUrl") ?: return@mapNotNull null
             val title = doc.getString("title") ?: "Shared drawing"
             val ts = doc.getTimestamp("timestamp")?.toDate()?.time ?: 0L
+            val senderEmail = doc.getString("senderEmail") ?: "anonymous"
             val receiver = doc.getString("receiverEmail") ?: ""
             SharedDrawingMetadata(
                 id = doc.id,
@@ -138,6 +144,7 @@ class CloudSyncRepository private constructor() {
                 imageUrl = url,
                 timestamp = ts,
                 senderId = uid,
+                senderEmail = senderEmail,
                 receiverEmail = receiver
             )
         }.sortedByDescending { it.timestamp }

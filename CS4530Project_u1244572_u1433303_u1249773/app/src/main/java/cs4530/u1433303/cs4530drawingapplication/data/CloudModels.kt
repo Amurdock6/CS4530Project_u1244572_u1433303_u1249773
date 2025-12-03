@@ -14,5 +14,6 @@ data class SharedDrawingMetadata(
     val imageUrl: String,
     val timestamp: Long,
     val senderId: String,
+    val senderEmail: String,
     val receiverEmail: String
 )

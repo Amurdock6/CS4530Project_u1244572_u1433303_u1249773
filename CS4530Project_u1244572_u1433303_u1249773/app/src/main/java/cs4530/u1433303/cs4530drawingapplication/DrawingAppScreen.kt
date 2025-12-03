@@ -158,7 +158,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                         ) {
                             Icon(Icons.Outlined.SaveAlt, contentDescription = null)
                             Spacer(Modifier.width(6.dp))
-                            Text("Save locally")
+                            Text("Save")
                         }
                         ElevatedButton(
                             modifier = Modifier.testTag("shareButton"),
@@ -167,7 +167,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null)
                             Spacer(Modifier.width(6.dp))
-                            Text("Quick share")
+                            Text("Share")
                         }
                         ElevatedButton(
                             modifier = Modifier.testTag("importButton"),
