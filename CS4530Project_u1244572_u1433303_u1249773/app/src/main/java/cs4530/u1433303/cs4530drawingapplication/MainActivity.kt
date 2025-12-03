@@ -692,7 +692,12 @@ fun MainScreen(
                                             )
                                         }
                                         Text(
-                                            "From ${shared.senderId.take(8)} -> ${formatter.format(shared.timestamp)}",
+                                            "From: ${shared.senderEmail}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            formatter.format(shared.timestamp),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
