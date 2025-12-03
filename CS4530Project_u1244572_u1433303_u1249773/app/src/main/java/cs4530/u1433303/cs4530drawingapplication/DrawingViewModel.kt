@@ -73,6 +73,16 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         )
     }
 
+    fun loadImportedBitmap(bitmap: Bitmap) {
+        editing = null
+        _uiState.value = _uiState.value.copy(
+            strokes = emptyList(),
+            backgroundImage = bitmap,
+            visionLabels = emptyList()
+        )
+        analyzeImage(bitmap)
+    }
+
     fun saveDrawing(canvasView: View) {
         viewModelScope.launch {
             val existing = editing
