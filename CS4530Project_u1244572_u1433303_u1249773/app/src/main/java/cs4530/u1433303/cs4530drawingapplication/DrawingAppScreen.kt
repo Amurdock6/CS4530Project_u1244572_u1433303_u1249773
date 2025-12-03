@@ -138,7 +138,7 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                                 Text("Canvas", style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     "Draw, import, save, share",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
