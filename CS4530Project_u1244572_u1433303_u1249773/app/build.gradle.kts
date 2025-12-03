@@ -31,7 +31,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "CLOUD_VISION_API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "CLOUD_VISION_API_KEY", "$apiKey")
     }
 
     buildTypes {
