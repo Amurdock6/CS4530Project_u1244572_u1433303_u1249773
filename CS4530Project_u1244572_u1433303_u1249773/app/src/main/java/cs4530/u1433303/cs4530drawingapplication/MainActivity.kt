@@ -603,15 +603,17 @@ fun MainScreen(
                                             )
                                     )
                                     Column(Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(shared.title, style = MaterialTheme.typography.titleMedium)
+
+                                        Text(
+                                            text = "Shared",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Text(shared.title, style = MaterialTheme.typography.titleMedium)
                                             Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = "Shared",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+
+
                                         Text(
                                             "To ${shared.receiverEmail}",
                                             style = MaterialTheme.typography.bodySmall,
@@ -682,15 +684,19 @@ fun MainScreen(
                                             )
                                     )
                                     Column(Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(shared.title, style = MaterialTheme.typography.titleMedium)
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = "Shared",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+
+                                        Text(
+                                            text = "Shared with you",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Text(shared.title, style = MaterialTheme.typography.titleMedium)
+
+                                        Spacer(Modifier.width(8.dp))
+
+
+
                                         Text(
                                             "From: ${shared.senderEmail}",
                                             style = MaterialTheme.typography.bodySmall,
