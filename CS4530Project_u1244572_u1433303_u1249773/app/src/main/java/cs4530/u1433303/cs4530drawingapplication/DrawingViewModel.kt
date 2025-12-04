@@ -12,9 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
+import cs4530.u1433303.cs4530drawingapplication.BoundingPoly
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 enum class BrushShape { Round, Square }
 
@@ -25,13 +27,21 @@ data class Stroke(
     val shape: BrushShape
 )
 
+data class UiBoundingPoly(val vertices: List<Offset>)
+
+data class VisionLabel(
+    val description: String,
+    val boundingPoly: UiBoundingPoly?,
+    val color: Color
+)
+
 data class DrawingUiState(
     val brushColor: Color = Color(0xFF000000),
     val brushSize: Float = 5f,
     val brushShape: BrushShape = BrushShape.Round,
     val strokes: List<Stroke> = emptyList(),
     val backgroundImage: Bitmap? = null,
-    val visionLabels: List<String> = emptyList(),
+    val visionLabels: List<VisionLabel> = emptyList(),
     val showVisionLabels: Boolean = false,
     var drawingName: String? = null
 )
@@ -146,11 +156,45 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
     private fun analyzeImage(bitmap: Bitmap) {
         viewModelScope.launch {
             val response = cloudVisionRepository.analyzeImage(bitmap)
-            response?.responses?.firstOrNull()?.labelAnnotations?.let { labels ->
-                val descriptions = labels.map { it.description }
-                _uiState.value = _uiState.value.copy(visionLabels = descriptions)
-                Log.d("DrawingViewModel", "Vision API labels: $descriptions")
+            val visionLabels = mutableListOf<VisionLabel>()
+            val imageWidth = bitmap.width
+            val imageHeight = bitmap.height
+            response?.responses?.firstOrNull()?.let { res ->
+                res.labelAnnotations?.let { labels ->
+                    visionLabels.addAll(
+                        labels.mapNotNull {
+                            convertBoundingPoly(it.boundingPoly, imageWidth, imageHeight)?.let { uiPoly ->
+                                VisionLabel(it.description, uiPoly, randomColor())
+                            }
+                        }
+                    )
+                }
+                res.localizedObjectAnnotations?.let { objects ->
+                    visionLabels.addAll(
+                        objects.mapNotNull {
+                            convertBoundingPoly(it.boundingPoly, imageWidth, imageHeight)?.let { uiPoly ->
+                                VisionLabel(it.name, uiPoly, randomColor())
+                            }
+                        }
+                    )
+                }
             }
+            _uiState.value = _uiState.value.copy(visionLabels = visionLabels)
+            Log.d("DrawingViewModel", "Vision API labels: $visionLabels")
         }
+    }
+
+    private fun convertBoundingPoly(poly: BoundingPoly?, imageWidth: Int, imageHeight: Int): UiBoundingPoly? {
+        return poly?.let { p ->
+            val mappedVertices = p.normalizedVertices.map { v ->
+                Offset( (v.x ?: 0f) * imageWidth, (v.y ?: 0f) * imageHeight)
+            }
+            UiBoundingPoly(mappedVertices)
+        }
+    }
+
+    private fun randomColor(): Color {
+        val random = Random.Default
+        return Color(random.nextInt(256), random.nextInt(256), random.nextInt(256))
     }
 }

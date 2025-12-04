@@ -59,7 +59,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -145,86 +149,83 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                             }
                         }
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            modifier = Modifier.testTag("saveCanvasButton"),
-                            onClick = {
-                                canvasViewRef?.let { view ->
-                                    if (state.drawingName == null) {
-                                        showSaveDrawingDialog = true
-                                    } else {
-                                        viewModel.saveDrawing(view)
+                    // row of features / options at top.
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                modifier = Modifier.testTag("saveCanvasButton"),
+                                onClick = {
+                                    canvasViewRef?.let { view ->
+                                        if (state.drawingName == null) {
+                                            showSaveDrawingDialog = true
+                                        } else {
+                                            viewModel.saveDrawing(view)
+                                        }
                                     }
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Outlined.SaveAlt, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Save")
-                        }
-                        ElevatedButton(
-                            modifier = Modifier.testTag("shareButton"),
-                            onClick = { shareCurrentCanvas() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Share, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Share")
-                        }
-                        ElevatedButton(
-                            modifier = Modifier.testTag("importButton"),
-                            onClick = {
-                                photoPicker.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Import photo")
-                        }
-                        OutlinedButton(
-                            modifier = Modifier.testTag("DrawingAppScreenUndoButton"),
-                            onClick = { viewModel.undoLastStroke() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Undo")
-                        }
-                        OutlinedButton(
-                            modifier = Modifier.testTag("clearCanvasButton"),
-                            onClick = { viewModel.clearCanvas() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Outlined.DeleteSweep, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Clear")
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.toggleVisionLabels() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text(if (state.showVisionLabels) "Hide labels" else "Show labels")
-                        }
-                        IconButton(onClick = { showColorDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Outlined.ColorLens,
-                                contentDescription = "Brush color"
-                            )
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Outlined.SaveAlt, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Save")
+                            }
+                            ElevatedButton(
+                                modifier = Modifier.testTag("shareButton"),
+                                onClick = { shareCurrentCanvas() },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Share")
+                            }
+                            ElevatedButton(
+                                modifier = Modifier.testTag("importButton"),
+                                onClick = {
+                                    photoPicker.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Image, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Import photo")
+                            }
+                            OutlinedButton(
+                                modifier = Modifier.testTag("DrawingAppScreenUndoButton"),
+                                onClick = { viewModel.undoLastStroke() },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Undo")
+                            }
+                            OutlinedButton(
+                                modifier = Modifier.testTag("clearCanvasButton"),
+                                onClick = { viewModel.clearCanvas() },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Outlined.DeleteSweep, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Clear")
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.toggleVisionLabels() },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(if (state.showVisionLabels) "Hide labels" else "Show labels")
+                            }
                         }
                     }
-                }
+
             }
         },
         bottomBar = {
@@ -337,8 +338,9 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
                 ) {
                     LazyColumn {
                         items(state.visionLabels) { label ->
+
                             Text(
-                                text = label,
+                                text = label.description,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(14.dp)

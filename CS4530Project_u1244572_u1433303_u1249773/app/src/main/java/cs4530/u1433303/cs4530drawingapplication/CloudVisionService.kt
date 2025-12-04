@@ -28,10 +28,27 @@ data class Feature(val type: String, val maxResults: Int = 10)
 data class AnnotateImageResponse(val responses: List<Response>)
 
 @Serializable
-data class Response(val labelAnnotations: List<EntityAnnotation>? = null)
+data class Response(
+    val labelAnnotations: List<EntityAnnotation>? = null,
+    val localizedObjectAnnotations: List<LocalizedObjectAnnotation>? = null
+)
 
 @Serializable
-data class EntityAnnotation(val description: String, val score: Float)
+data class EntityAnnotation(val description: String, val score: Float, val boundingPoly: BoundingPoly? = null)
+
+@Serializable
+data class LocalizedObjectAnnotation(
+    val name: String,
+    val score: Float,
+    val boundingPoly: BoundingPoly? = null
+)
+
+@Serializable
+data class BoundingPoly(val normalizedVertices: List<NormalizedVertex>)
+
+@Serializable
+data class NormalizedVertex(val x: Float? = 0f, val y: Float? = 0f)
+
 
 class CloudVisionService {
     private val client: HttpClient = KtorClient.httpClient
@@ -52,8 +69,8 @@ class CloudVisionService {
                 Request(
                     image = Image(base64Image),
                     features = listOf(
-                        Feature(type = "LABEL_DETECTION"),
-                        Feature(type = "OBJECT_LOCALIZATION")
+                        Feature(type = "OBJECT_LOCALIZATION"),
+                        Feature(type = "LABEL_DETECTION")
                     )
                 )
             )
