@@ -232,6 +232,11 @@ fun MainScreen(
         }
     }
 
+    var localDrawingsExpanded by remember { mutableStateOf(false) }
+    var cloudImagesExpanded by remember { mutableStateOf(false) }
+    var sharedByYouExpanded by remember { mutableStateOf(false) }
+    var sharedWithYouExpanded by remember { mutableStateOf(false) }
+
     LaunchedEffect(userId, userEmail) {
         if (!userId.isNullOrBlank()) {
             cloudViewModel.refreshUserData(userId, userEmail)
@@ -304,6 +309,17 @@ fun MainScreen(
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
                     )
+                }
+
+                item {
+                    Button(
+                        onClick = onNewDrawing,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("Start a new drawing")
+                    }
                 }
 
                 item {
@@ -406,7 +422,8 @@ fun MainScreen(
                 if (drawings.isEmpty()) {
                     item { EmptyState("No drawings yet", "Start a new canvas and see it appear here.") }
                 } else {
-                    items(drawings) { drawing ->
+                    val shownDrawings = if (localDrawingsExpanded || drawings.size <= 2) drawings else drawings.take(2)
+                    items(shownDrawings) { drawing ->
                         val isBackedUp = cloudState.userDrawings.any { it.title == drawing.name }
                         Card(
                             modifier = Modifier
@@ -498,6 +515,13 @@ fun MainScreen(
                             }
                         }
                     }
+                    if (drawings.size > 2) {
+                        item {
+                            TextButton(onClick = { localDrawingsExpanded = !localDrawingsExpanded }) {
+                                Text(if (localDrawingsExpanded) "Show Less" else "Show ${drawings.size - 2} more")
+                            }
+                        }
+                    }
                 }
 
                 item {
@@ -515,7 +539,8 @@ fun MainScreen(
                 if (cloudState.userDrawings.isEmpty()) {
                     item { EmptyState("No cloud items yet", "Back up a drawing to access it anywhere.") }
                 } else {
-                    items(cloudState.userDrawings, key = { it.id }) { remote ->
+                    val shownItems = if (cloudImagesExpanded || cloudState.userDrawings.size <= 2) cloudState.userDrawings else cloudState.userDrawings.take(2)
+                    items(shownItems, key = { it.id }) { remote ->
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
@@ -526,6 +551,12 @@ fun MainScreen(
                                 modifier = Modifier.padding(12.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Text(
+                                    text = "Saved to cloud",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -560,6 +591,13 @@ fun MainScreen(
                             }
                         }
                     }
+                    if (cloudState.userDrawings.size > 2) {
+                        item {
+                            TextButton(onClick = { cloudImagesExpanded = !cloudImagesExpanded }) {
+                                Text(if (cloudImagesExpanded) "Show Less" else "Show ${cloudState.userDrawings.size - 2} more")
+                            }
+                        }
+                    }
                 }
 
                 item {
@@ -577,7 +615,8 @@ fun MainScreen(
                 if (cloudState.sharedByMe.isEmpty()) {
                     item { EmptyState("Nothing shared yet", "Share a drawing by email to populate this list.") }
                 } else {
-                    items(cloudState.sharedByMe, key = { it.id }) { shared ->
+                    val shownItems = if (sharedByYouExpanded || cloudState.sharedByMe.size <= 2) cloudState.sharedByMe else cloudState.sharedByMe.take(2)
+                    items(shownItems, key = { it.id }) { shared ->
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
@@ -603,15 +642,17 @@ fun MainScreen(
                                             )
                                     )
                                     Column(Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(shared.title, style = MaterialTheme.typography.titleMedium)
+
+                                        Text(
+                                            text = "Shared",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Text(shared.title, style = MaterialTheme.typography.titleMedium)
                                             Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = "Shared",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+
+
                                         Text(
                                             "To ${shared.receiverEmail}",
                                             style = MaterialTheme.typography.bodySmall,
@@ -639,6 +680,13 @@ fun MainScreen(
                             }
                         }
                     }
+                    if (cloudState.sharedByMe.size > 2) {
+                        item {
+                            TextButton(onClick = { sharedByYouExpanded = !sharedByYouExpanded }) {
+                                Text(if (sharedByYouExpanded) "Show Less" else "Show ${cloudState.sharedByMe.size - 2} more")
+                            }
+                        }
+                    }
                 }
 
                 item {
@@ -656,7 +704,8 @@ fun MainScreen(
                 if (cloudState.sharedWithMe.isEmpty()) {
                     item { EmptyState("Nothing shared yet", "Shared drawings sent to ${userEmail.ifBlank { "your email" }} will appear here.") }
                 } else {
-                    items(cloudState.sharedWithMe, key = { it.id }) { shared ->
+                    val shownItems = if (sharedWithYouExpanded || cloudState.sharedWithMe.size <= 2) cloudState.sharedWithMe else cloudState.sharedWithMe.take(2)
+                    items(shownItems, key = { it.id }) { shared ->
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
@@ -682,17 +731,26 @@ fun MainScreen(
                                             )
                                     )
                                     Column(Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(shared.title, style = MaterialTheme.typography.titleMedium)
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = "Shared",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+
                                         Text(
-                                            "From ${shared.senderId.take(8)} -> ${formatter.format(shared.timestamp)}",
+                                            text = "Shared with you",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Text(shared.title, style = MaterialTheme.typography.titleMedium)
+
+                                        Spacer(Modifier.width(8.dp))
+
+
+
+                                        Text(
+                                            "From: ${shared.senderEmail}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            formatter.format(shared.timestamp),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -710,6 +768,13 @@ fun MainScreen(
                                         Text("Remove")
                                     }
                                 }
+                            }
+                        }
+                    }
+                    if (cloudState.sharedWithMe.size > 2) {
+                        item {
+                            TextButton(onClick = { sharedWithYouExpanded = !sharedWithYouExpanded }) {
+                                Text(if (sharedWithYouExpanded) "Show Less" else "Show ${cloudState.sharedWithMe.size - 2} more")
                             }
                         }
                     }
@@ -918,7 +983,7 @@ fun SplashScreen() {
                     colors = listOf(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
                         MaterialTheme.colorScheme.secondary.copy(alpha = 0.65f),
-                        MaterialTheme.colorScheme.background
+                        MaterialTheme.colorScheme.tertiary
                     )
                 )
             ),

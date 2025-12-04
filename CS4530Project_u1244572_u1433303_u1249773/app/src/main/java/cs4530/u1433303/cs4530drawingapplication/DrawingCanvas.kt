@@ -41,6 +41,28 @@ fun DrawingCanvas(
             drawImage(it.asImageBitmap())
         }
 
+        // Draw vision labels
+        if (state.value.showVisionLabels) {
+            state.value.visionLabels.forEach { label ->
+                label.boundingPoly?.vertices?.let { vertices ->
+                    if (vertices.isNotEmpty()) {
+                        val path = Path().apply {
+                            moveTo(vertices.first().x, vertices.first().y)
+                            vertices.drop(1).forEach { vertex ->
+                                lineTo(vertex.x, vertex.y)
+                            }
+                            close()
+                        }
+                        drawPath(
+                            path = path,
+                            color = label.color,
+                            style = Stroke(width = 5f)
+                        )
+                    }
+                }
+            }
+        }
+
         // draw the strokes
         for (stroke in state.value.strokes) {
             val path = Path().apply {
