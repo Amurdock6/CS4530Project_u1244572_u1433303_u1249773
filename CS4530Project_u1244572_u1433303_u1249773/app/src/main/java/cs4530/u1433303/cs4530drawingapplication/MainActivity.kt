@@ -409,7 +409,7 @@ fun MainScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Use Share via email or Backup to cloud on each drawing.",
+                                    text = "Use Share via email or Save to cloud on each drawing.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -523,7 +523,7 @@ fun MainScreen(
                                             },
                                             enabled = !userId.isNullOrBlank() && !isBackedUp,
                                             shape = RoundedCornerShape(10.dp)
-                                        ) { Text("Backup to cloud") }
+                                        ) { Text("Save to cloud") }
                                         IconButton(onClick = { viewModel.deleteDrawing(drawing) }) {
                                             Icon(Icons.Default.Delete, contentDescription = "Delete")
                                         }
