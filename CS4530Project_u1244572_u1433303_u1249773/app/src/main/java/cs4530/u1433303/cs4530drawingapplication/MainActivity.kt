@@ -307,6 +307,17 @@ fun MainScreen(
                 }
 
                 item {
+                    Button(
+                        onClick = onNewDrawing,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("Start a new drawing")
+                    }
+                }
+
+                item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
