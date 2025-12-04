@@ -12,11 +12,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -329,9 +331,10 @@ fun DrawingAppScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
             if (state.showVisionLabels) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp),
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
+                        .width(400.dp)
+                        .heightIn(max = 150.dp, min = 0.dp),
                     shape = RoundedCornerShape(14.dp),
                     tonalElevation = 12.dp,
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
