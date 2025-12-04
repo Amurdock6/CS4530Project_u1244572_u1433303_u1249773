@@ -49,7 +49,7 @@ Composable Android drawing app with local persistence, cloud backup/sharing via 
 
 ## Running & Development Notes
 - Toolchain: Kotlin 2.0.21, AGP 8.13.0, Compose Material3, Room 2.6.1; minSdk 24 / targetSdk 36.
-- Required files (not checked in): `app/google-services.json`, `app/secrets.properties` with a valid Vision API key. Without these, Firebase/Vision features will fail; the rest of the app (local drawing) still works.
+- Required files (not checked in): `app/google-services.json`, `app/secrets.properties` with a valid Vision API key. Without these, Firebase/Vision features will fail; the rest of the app (local drawing) still works, (however, there is a build error if the file for google-services can't be found at all).
 - Start activity: `cs4530.u1433303.cs4530drawingapplication.MainActivity`.
 - Network permission only (`INTERNET`). Backups/sharing/Vision need connectivity and signed-in user (for Firebase).
 - Database migration: `fallbackToDestructiveMigration()` wipes local rows on schema changes; adjust before shipping if persistence matters.
