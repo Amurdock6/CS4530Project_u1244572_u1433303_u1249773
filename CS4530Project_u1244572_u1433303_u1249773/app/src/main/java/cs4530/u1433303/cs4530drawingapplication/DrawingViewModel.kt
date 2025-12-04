@@ -12,11 +12,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingEntity
 import cs4530.u1433303.cs4530drawingapplication.data.DrawingRepository
-import cs4530.u1433303.cs4530drawingapplication.BoundingPoly
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.min
 import kotlin.random.Random
+import androidx.core.graphics.scale
+
 
 enum class BrushShape { Round, Square }
 
@@ -51,6 +53,20 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
     val uiState = _uiState.asStateFlow()
     private var editing: DrawingEntity? = null
     private val cloudVisionRepository by lazy { CloudVisionRepository() }
+
+    // property to hold the pending drawing until the view is ready
+    private var pendingDrawing: DrawingEntity? = null
+
+    var currentViewWidth: Int = 1080
+    var currentViewHeight: Int = 1920
+
+
+
+    fun prepareDrawingToLoad(drawing: DrawingEntity) {
+        pendingDrawing = drawing
+        // Reset state immediately for a clean slate
+        _uiState.value = DrawingUiState(drawingName = drawing.name)
+    }
 
     fun startNew() {
         editing = null
@@ -87,13 +103,17 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
 
     fun loadImportedBitmap(bitmap: Bitmap) {
         editing = null
+
+        val scaledBitmap = scaleBitmapToFit(bitmap, currentViewWidth, currentViewHeight)
+        Log.e("DrawingViewModel", "Scaled Bitmap Width: ${scaledBitmap.width}, Height: ${scaledBitmap.height}, View Width: $currentViewWidth, Height: $currentViewHeight")
+
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
-            backgroundImage = bitmap,
+            backgroundImage = scaledBitmap,
             visionLabels = emptyList(),
             drawingName = null
         )
-        analyzeImage(bitmap)
+        analyzeImage(scaledBitmap)
     }
 
     fun saveDrawing(canvasView: View, drawingName: String? = _uiState.value.drawingName) {
@@ -112,16 +132,59 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         }
     }
 
-    fun loadDrawing(drawing: DrawingEntity) {
-        editing = drawing
+    private fun scaleBitmapToFit(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+        val widthRatio = maxWidth.toFloat() / bitmap.width
+        val heightRatio = maxHeight.toFloat() / bitmap.height
+
+        val scaleFactor = if (bitmap.width > maxWidth || bitmap.height > maxHeight) {
+            // Image is larger than the canvas, scale it down to fit.
+            min(widthRatio, heightRatio)
+        } else {
+            // Image is smaller than the canvas.
+            if ((bitmap.height * widthRatio) > maxHeight) {
+                heightRatio
+            } else {
+                widthRatio
+            }
+        }
+
+        if (scaleFactor == 1.0f) {
+            return bitmap
+        }
+
+        val newWidth = (bitmap.width * scaleFactor).toInt()
+        val newHeight = (bitmap.height * scaleFactor).toInt()
+
+        if (newWidth <= 0 || newHeight <= 0) {
+            return bitmap
+        }
+
+        return bitmap.scale(newWidth, newHeight, true)
+    }
+
+    fun loadDrawing(viewWidth: Int = 1080, viewHeight: Int = 1920) {
+
+        currentViewWidth = viewWidth;
+        currentViewHeight = viewHeight;
+
+        val drawingToLoad = pendingDrawing ?: return // Do nothing if no drawing is pending
+        editing = drawingToLoad
+
+
+        val scaledBitmap = scaleBitmapToFit(drawingToLoad.content, viewWidth, viewHeight)
+
+        Log.e("DrawingViewModel", "Scaled Bitmap Width: ${scaledBitmap.width}, Height: ${scaledBitmap.height}, View Width: $currentViewWidth, Height: $currentViewHeight")
+
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
-            backgroundImage = drawing.content,
+            backgroundImage = scaledBitmap,
             visionLabels = emptyList(),
-            drawingName = drawing.name
+            drawingName = drawingToLoad.name
         )
-        analyzeImage(drawing.content)
-        Log.d("DrawingViewModel", "Drawing Content: $drawing")
+        analyzeImage(scaledBitmap)
+        Log.d("DrawingViewModel", "Drawing Content: $drawingToLoad")
+
+        pendingDrawing = null
     }
 
     fun undoLastStroke(){
@@ -139,16 +202,23 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
     // Import from the system Photo Picker
     fun importFromUri(context: Context, uri: Uri) {
         viewModelScope.launch {
+
+
             val bmp = context.contentResolver.openInputStream(uri)?.use { stream ->
                 BitmapFactory.decodeStream(stream)
             }
+
+
             if (bmp != null) {
+
+                val scaledBitmap = scaleBitmapToFit(bmp, currentViewWidth, currentViewHeight)
+
                 _uiState.value = _uiState.value.copy(
                     strokes = emptyList(),
-                    backgroundImage = bmp,
+                    backgroundImage = scaledBitmap,
                     visionLabels = emptyList()
                 )
-                analyzeImage(bmp)
+                analyzeImage(scaledBitmap)
             }
         }
     }

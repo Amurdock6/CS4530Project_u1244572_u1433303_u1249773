@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -169,7 +171,7 @@ fun App(
                     nav.navigate("editor")
                 },
                 onOpenDrawing = { drawing ->
-                    drawingViewModel.loadDrawing(drawing)
+                    drawingViewModel.prepareDrawingToLoad(drawing)
                     nav.navigate("editor")
                 },
                 onImportToCanvas = { bitmap ->
@@ -195,12 +197,27 @@ fun DrawingScreen(viewModel: DrawingViewModel, onBack: () -> Unit) {
             MaterialTheme.colorScheme.background
         )
     )
+
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradient)
         ) {
+            // Get the dimensions
+            val density = LocalDensity.current
+
+            val viewWidthPx = with(density) { maxWidth.toPx() }.toInt()
+            val viewHeightPx = with(density) { maxHeight.toPx() }.toInt()
+
+
+            // Trigger the loading logic only once when the view is ready
+            LaunchedEffect(Unit) {
+                viewModel.currentViewHeight = viewHeightPx
+                viewModel.currentViewWidth = viewWidthPx
+
+                viewModel.loadDrawing(viewWidthPx, viewHeightPx)
+            }
             DrawingAppScreen(
                 viewModel,
                 onBack = onBack
@@ -449,7 +466,7 @@ fun MainScreen(
                                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
                                             shape = RoundedCornerShape(14.dp)
                                         )
-                                    .padding(6.dp)
+                                        .padding(6.dp)
                                 )
                                 Column(
                                     modifier = Modifier
