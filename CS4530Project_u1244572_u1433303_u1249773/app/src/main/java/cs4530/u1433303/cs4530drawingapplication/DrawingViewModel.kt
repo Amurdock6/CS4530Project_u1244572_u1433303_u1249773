@@ -32,7 +32,8 @@ data class DrawingUiState(
     val strokes: List<Stroke> = emptyList(),
     val backgroundImage: Bitmap? = null,
     val visionLabels: List<String> = emptyList(),
-    val showVisionLabels: Boolean = false
+    val showVisionLabels: Boolean = false,
+    var drawingName: String? = null
 )
 
 class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewModel() {
@@ -69,7 +70,8 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
             backgroundImage = null,
-            visionLabels = emptyList()
+            visionLabels = emptyList(),
+            drawingName = null
         )
     }
 
@@ -78,18 +80,24 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
             backgroundImage = bitmap,
-            visionLabels = emptyList()
+            visionLabels = emptyList(),
+            drawingName = null
         )
         analyzeImage(bitmap)
     }
 
-    fun saveDrawing(canvasView: View) {
+    fun saveDrawing(canvasView: View, drawingName: String? = _uiState.value.drawingName) {
         viewModelScope.launch {
             val existing = editing
             if (existing != null) {
                 drawingRepository.updateExistingFromView(canvasView, existing)  // overwrite
             } else {
-                drawingRepository.saveDrawingFromView(canvasView)               // create new
+                if (drawingName != null) {
+                    drawingRepository.saveDrawingFromView(canvasView, drawingName)
+                }
+                else {
+                    drawingRepository.saveDrawingFromView(canvasView)
+                }
             }
         }
     }
@@ -99,7 +107,8 @@ class DrawingViewModel(private val drawingRepository: DrawingRepository) : ViewM
         _uiState.value = _uiState.value.copy(
             strokes = emptyList(),
             backgroundImage = drawing.content,
-            visionLabels = emptyList()
+            visionLabels = emptyList(),
+            drawingName = drawing.name
         )
         analyzeImage(drawing.content)
         Log.d("DrawingViewModel", "Drawing Content: $drawing")

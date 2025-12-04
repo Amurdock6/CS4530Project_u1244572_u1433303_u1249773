@@ -48,12 +48,19 @@ class DrawingRepository private constructor(
         }
     }
 
-    suspend fun saveDrawingFromView(canvasView: View) {
+    suspend fun saveDrawingFromView(canvasView: View, drawingName: String? = null) {
         withContext(Dispatchers.IO) {
             val bitmap: Bitmap = canvasView.drawToBitmap()
 
             // Save bitmap to file
-            val filename = "drawing_${UUID.randomUUID()}.png"
+            var filename = "drawing_${UUID.randomUUID()}.png"
+            if (drawingName != null) {
+                filename = if (!drawingName.endsWith(".png")) {
+                    "$drawingName.png"
+                } else {
+                    drawingName
+                }
+            }
             val file = File(context.filesDir, filename)
             FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
