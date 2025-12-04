@@ -983,7 +983,7 @@ fun SplashScreen() {
                     colors = listOf(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
                         MaterialTheme.colorScheme.secondary.copy(alpha = 0.65f),
-                        MaterialTheme.colorScheme.background
+                        MaterialTheme.colorScheme.tertiary
                     )
                 )
             ),
